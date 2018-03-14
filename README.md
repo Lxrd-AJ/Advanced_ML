@@ -1,4 +1,5 @@
 # Advanced_ML
+* https://github.com/kjw0612/awesome-deep-vision#semantic-segmentation
 Here is the approach, use the MIT SceneParsing network as a baseline
 - [ ] Remove the people's part from the network
 	- [ ] Verify it still works
