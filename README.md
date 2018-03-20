@@ -1,9 +1,10 @@
 # Advanced_ML
-Here is the approach, use the MIT SceneParsing network as a baseline
-- [ ] Remove the people's part from the network
-	- [ ] Verify it still works
-- [ ] Adapt ideas from PSP Net
-	- [ ] Train on all the datasets and verify results
+
+## Ensemble
+* Mask-RCNNs
+* PSPNet
+* Segnet
+* FCNS
 
 # Project Ideas
 * http://sceneparsing.csail.mit.edu/results2016.html
