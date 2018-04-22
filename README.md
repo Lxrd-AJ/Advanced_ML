@@ -1,15 +1,43 @@
 # Advanced_ML
+# Action plan for the DSTL Image Segmentation
 
-## Ensemble
-* Mask-RCNNs
-* PSPNet
-* Segnet
-* FCNS
+# Data Preprocessing (Philipp and James)
+* https://www.kaggle.com/c/dstl-satellite-imagery-feature-detection 
+* https://www.kaggle.com/alijs1/squeezed-this-in-successful-kernel-run/code
+* General overview: https://blog.deepsense.ai/deep-learning-for-satellite-imagery-via-image-segmentation/
+- [ ] Data Preprocessing, visualisations and packaging for training (2 people) (Philipp, James)
+	- https://www.kaggle.com/torrinos/exploration-and-plotting?scriptVersionId=558039
+	- https://www.kaggle.com/visoft/export-pixel-wise-mask/code
+	- https://www.kaggle.com/jeffhebert/stitch-a-16-channel-image-together
 
-# Project Ideas
-* http://sceneparsing.csail.mit.edu/results2016.html
 
-# Papers to Read
+# Model Construction and Training (AJ and Ahmed)
+- Important links
+	- https://github.com/Lextal/pspnet-pytorch
+- [x] UNet Implementation
+- [ ] Model training
+	- Try using TorchVision (LSUN) to test the model http://pytorch.org/docs/master/torchvision/datasets.html#lsun 
+
+# Model Evaluation
+- [ ] Convert predictions into the right format for submissions (1 person, Jeff)
+	- [ ] Model validation
+	- [ ] Analysis on the performance of the model
+	- https://www.kaggle.com/shawn775/polygon-transformation-to-match-image?scriptVersionId=624248
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Papers
 - [ ] A Review on Deep Learning Techniques Applied to Semantic Segmentation https://arxiv.org/pdf/1704.06857.pdf 
 - [ ] Long, Jonathan, Evan Shelhamer, and Trevor Darrell. "Fully convolutional networks for semantic segmentation." CVPR. 2015. https://arxiv.org/pdf/1605.06211.pdf 
 - [ ] He, Kaiming, et al. "Deep residual learning for image recognition." arXiv:1512.03385, 2015.
@@ -19,22 +47,6 @@
 - [ ] https://github.com/kjw0612/awesome-deep-vision#semantic-segmentation
 - [ ] DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution and Fully Connected CRFs https://arxiv.org/pdf/1606.00915.pdf
 
-# PSPNet implementations
-* https://github.com/mitmul/chainer-pspnet
-* https://github.com/Lextal/pspnet-pytorch
-* https://github.com/hszhao/PSPNet
-
-# Scene Parsing/Segmentation
-* https://github.com/CSAILVision/sceneparsing and http://sceneparsing.csail.mit.edu/
-* https://selfdrivingcars.mit.edu/
-* https://github.com/wkentaro/pytorch-fcn
-
-# Datasets
-* ADE20K http://sceneparsing.csail.mit.edu/#Download 
-	* Implementation https://github.com/hangzhaomit/semantic-segmentation-pytorch 
-* KITTI Dataset
-* CityScapes dataset
-* Pascal VOC2012
 
 
 # Overview of semantic segmentation over the years
