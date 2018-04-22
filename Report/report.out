@@ -1,0 +1,10 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Related Work}{section.1}% 2
+\BOOKMARK [1][-]{section.2}{Satellite Imagery Dataset}{}% 3
+\BOOKMARK [2][-]{subsection.2.1}{Image Annotation}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.2}{Imagery statistics}{section.2}% 5
+\BOOKMARK [1][-]{section.3}{U-Net Convolution Network}{}% 6
+\BOOKMARK [1][-]{section.4}{Experiments}{}% 7
+\BOOKMARK [2][-]{subsection.4.1}{Metrics}{section.4}% 8
+\BOOKMARK [1][-]{section.5}{Conclusion}{}% 9
+\BOOKMARK [1][-]{section.6}{Future Work}{}% 10

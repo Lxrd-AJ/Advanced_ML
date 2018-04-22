@@ -1,0 +1,79 @@
+\documentclass[10pt,twocolumn]{article} 
+\usepackage{simpleConference}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{url,hyperref}
+
+\begin{document}
+
+\title{Convolutional Neural Networks for Satellite Image Segmentation}
+
+\author{Ganiyu Ibraheem, Philipp Seybold, James Purcell, Ahmed Abouseida and Evgeny Saveliev. \\
+\\
+Electronics and Computer Science \\
+University of Southampton \\
+\today
+}
+
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+This report highlights how a convolutional neural network was used for segmenting objects in satellite images. This project is inspired by the \href{https://www.kaggle.com/c/dstl-satellite-imagery-feature-detection}{Kaggle DSTL satellite imagery feature detection challenge} where the requirement was to build a learning machine that identify features in overhead imagery to alleviate the burdens on their image analysts.
+
+Our solution is based on U-Net, a convolutionary neural network which we trained with satellite images of 19-spectral bands and achieved a 90\% classification accuracy. %TODO: Update classification accuracy
+%TODO: Summarise report here
+\end{abstract}
+
+
+\section{Introduction}
+%TODO: Introduction needed
+
+	\subsection{Related Work}
+	%TODO: Subsection
+
+
+\section{Satellite Imagery Dataset}
+%TODO: Talk about the dataset here, the format it was in, how we transformed it and collated them for preprocessing
+	\subsection{Image Annotation}
+	%TODO: Talk about how the dataset was annotated
+	\subsection{Imagery statistics}
+	%TODO: Talk about the number of classes in the dataset, where they balanced? How many for each class etc
+		\begin{description}
+		  \item[$\bullet$] Segmentation Quality: %TODO: what was the quality of the segmentation in the ground truth
+		  \item[$\bullet$] Object Naming: %TODO: Where there any ambiguities in the class labels e.g car and large trucks are ambigious; what did we do about that
+		\end{description}
+
+\section{U-Net Convolution Network}
+%TODO: Talk about U-Net here, 
+%TODO: Include Architecture diagram for U-Net here
+%TODO: Explain some basic deep learning terms e.g convolution, deconvolution etc
+
+\section{Experiments}
+%TODO: Talk about experiments done here
+	\subsection{Metrics}
+		\begin{description}
+			\item[$\bullet$] Pixel Accuracy: indicates the proportion of correctly classified pixels
+			\item[$\bullet$] Mean Accuracy: indicates the proportion of correctly classified pixels averaged over all the classes.
+			\item[$\bullet$] Mean IoU: indicates the intersection-over-union between the predicted and ground-truth pixels, averaged over all the classes.
+			\item[$\bullet$] Weighted IoU: indicates the IoU weighted by the total pixel ratio of each class.
+		\end{description}
+
+
+\section{Conclusion}
+%TODO: Conclusion
+
+\section{Future Work}
+
+This material is important -- part of the value of a paper is showing how the work sets new research directions. I like bullet lists here. A couple of things to keep in mind:
+\begin{description}
+ 	\item[$\bullet$]  We are currently extending the algorithm to use Mask-RCNN and PSPNet, and preliminary results are encouraging.
+	\item[$\bullet$] We are exploring hand crafting a more extensive dataset using Google Earth; Gathering images at different intervals of heights above sea level e.g 200m, 500m, 1km etc and utilising a site like Amazon Turk or \href{https://appen.com/}{Appen}
+\end{description}
+
+
+\bibliographystyle{abbrv}
+\bibliography{refs}
+\end{document}
