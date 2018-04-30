@@ -14,9 +14,10 @@ class myDatasetClass(Dataset):
     def __init__(self, dir_path, inputPath, transform=None):
         """
         Args:
-            dir (string): Directory with all the images.
+            dir_path (string): workingDirectory
+            inputPath (string): relative path to input images
             transform (callable, optional): Optional transform to be applied
-                on a sample.
+                on a sample
         """
         inputs = os.listdir(str(dir_path)+str(inputPath))
         inDir = 'input'
