@@ -17,7 +17,7 @@
 	- [ ] Rotations
 	
 - [ ] Mask-to-Polygon Transformation
-
+- [ ] Data visualization
 
 	- https://www.kaggle.com/torrinos/exploration-and-plotting?scriptVersionId=558039
 	- https://www.kaggle.com/visoft/export-pixel-wise-mask/code
