@@ -11,6 +11,8 @@
 	- [x] 3-Band
 	- [ ] 16-Band
 - [x] Creatable Torch DataLoader
+	- [ ] Train dataset
+	- [ ] Test dataset
 - [ ] Data Transformations
 	- [ ] Cropping
 	- [ ] Stretching
@@ -31,7 +33,7 @@
 - [ ] Model training
 	- Try using TorchVision (LSUN) to test the model http://pytorch.org/docs/master/torchvision/datasets.html#lsun 
 
-# Model Evaluation
+# Model Evaluation (AJ and Ahmed)
 - [ ] Convert predictions into the right format for submissions (1 person, Jeff)
 	- [ ] Model validation
 	- [ ] Analysis on the performance of the model
