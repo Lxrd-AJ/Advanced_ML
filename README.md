@@ -5,7 +5,22 @@
 * https://www.kaggle.com/c/dstl-satellite-imagery-feature-detection 
 * https://www.kaggle.com/alijs1/squeezed-this-in-successful-kernel-run/code
 * General overview: https://blog.deepsense.ai/deep-learning-for-satellite-imagery-via-image-segmentation/
-- [ ] Data Preprocessing, visualisations and packaging for training (2 people) (Philipp, James)
+
+- [x] Data Importing (Goal: 1x 20-channels image)
+	- [ ] Gray-Scale
+	- [x] 3-Band
+	- [ ] 16-Band
+- [x] Creatable Torch DataLoader
+	- [ ] Train dataset
+	- [ ] Test dataset
+- [ ] Data Transformations
+	- [ ] Cropping
+	- [ ] Stretching
+	- [ ] Rotations
+	
+- [ ] Mask-to-Polygon Transformation
+- [ ] Data visualization
+
 	- https://www.kaggle.com/torrinos/exploration-and-plotting?scriptVersionId=558039
 	- https://www.kaggle.com/visoft/export-pixel-wise-mask/code
 	- https://www.kaggle.com/jeffhebert/stitch-a-16-channel-image-together
@@ -18,18 +33,11 @@
 - [ ] Model training
 	- Try using TorchVision (LSUN) to test the model http://pytorch.org/docs/master/torchvision/datasets.html#lsun 
 
-# Model Evaluation
+# Model Evaluation (AJ and Ahmed)
 - [ ] Convert predictions into the right format for submissions (1 person, Jeff)
 	- [ ] Model validation
 	- [ ] Analysis on the performance of the model
 	- https://www.kaggle.com/shawn775/polygon-transformation-to-match-image?scriptVersionId=624248
-
-
-
-
-
-
-
 
 
 
