@@ -7,24 +7,21 @@
 * General overview: https://blog.deepsense.ai/deep-learning-for-satellite-imagery-via-image-segmentation/
 
 - [x] Data Importing (Goal: 1x 20-channels image)
-	- [ ] Gray-Scale
+	- [x] Gray-Scale
 	- [x] 3-Band
 	- [ ] 16-Band
 - [x] Creatable Torch DataLoader
-	- [ ] Train dataset
-	- [ ] Test dataset
-- [ ] Data Transformations
-	- [ ] Cropping
-	- [ ] Stretching
+- [x] Data Transformations
+	- [x] Random-cropping
+	- [x] Resizing
 	- [ ] Rotations
-	
-- [ ] Mask-to-Polygon Transformation
-- [ ] Data visualization
+- [x] Mask-to-Polygon Transformation (in data_import.py "mask_to_polygons" function)
 
+- [ ] Data visualization
 	- https://www.kaggle.com/torrinos/exploration-and-plotting?scriptVersionId=558039
 	- https://www.kaggle.com/visoft/export-pixel-wise-mask/code
 	- https://www.kaggle.com/jeffhebert/stitch-a-16-channel-image-together
-
+- [ ] Report
 
 # Model Construction and Training (AJ and Ahmed)
 - Important links
