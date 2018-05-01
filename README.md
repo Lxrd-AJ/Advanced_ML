@@ -31,7 +31,6 @@
 	- https://github.com/Lextal/pspnet-pytorch
 - [x] UNet Implementation
 - [ ] Model training
-	- Try using TorchVision (LSUN) to test the model http://pytorch.org/docs/master/torchvision/datasets.html#lsun 
 
 # Model Evaluation (AJ and Ahmed)
 - [ ] Convert predictions into the right format for submissions (1 person, Jeff)
