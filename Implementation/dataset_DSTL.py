@@ -40,7 +40,7 @@ class datasetDSTL(Dataset):
                 if channel=='rgb':
                     rgbImage = self.getImageType('rgb',imageId, inputs)
                     rgbImage = cv2.resize(rgbImage, res)
-                    newInputs.append(self.saveNewImage('\\rgb-rscl\\',rgbImage, imageId))
+                    newInputs.append(self.saveNewImage('rgb-rscl',rgbImage, imageId))
                 else:
                     if channel=='gray':
                         grayImg = self.getImageType('gray',imageId, inputs)
@@ -181,6 +181,7 @@ class datasetDSTL(Dataset):
         # image = image.transpose((2, 0, 1))
         
         # Added Cuda support http://pytorch.org/tutorials/beginner/former_torchies/tensor_tutorial.html#cuda-tensors
+        image = image.astype(np.float)
         if torch.cuda.is_available():
             return torch.from_numpy(image, device=torch.device('cuda'))    
         return torch.from_numpy(image)

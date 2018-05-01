@@ -15,7 +15,7 @@ _NUM_CHANNELS_= 3
 _IMAGE_SIZE = 512
 
 
-trainset = datasetDSTL(dir_path, inputPath)
+trainset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(100,100))
 testset = datasetDSTL(dir_path, inputPath) #TODO: BAD! Use a real test dataset
 trainloader = DataLoader(trainset, batch_size=1, shuffle=True, num_workers=4)
 testloader = DataLoader(testset, batch_size=1, shuffle=True, num_workers=4)
