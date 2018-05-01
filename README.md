@@ -11,12 +11,12 @@
 	- [x] 3-Band
 	- [ ] 16-Band
 - [x] Creatable Torch DataLoader
-- [ ] Data Transformations
+- [x] Data Transformations
 	- [x] Random-cropping
 	- [x] Resizing
 	- [ ] Rotations
 	
-- [ ] Mask-to-Polygon Transformation
+- [x] Mask-to-Polygon Transformation
 - [ ] Data visualization
 
 	- https://www.kaggle.com/torrinos/exploration-and-plotting?scriptVersionId=558039
