@@ -11,10 +11,8 @@
 	- [x] 3-Band
 	- [ ] 16-Band
 - [x] Creatable Torch DataLoader
-	- [ ] Train dataset
-	- [ ] Test dataset
 - [ ] Data Transformations
-	- [ ] Cropping
+	- [x] Random-cropping
 	- [x] Resizing
 	- [ ] Rotations
 	
