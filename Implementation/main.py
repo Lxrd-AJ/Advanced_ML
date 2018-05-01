@@ -4,21 +4,21 @@ import numpy as np
 import torch.optim as optim
 import torch.nn as nn
 import os
-from dataset_DSTL import myDatasetClass 
+from dataset_DSTL import datasetDSTL
 from torch.utils.data import DataLoader
 from unet_model import UNet
 
-dir_path = os.path.dirname(os.path.realpath(__file__)) + "/dstl_satellite_data/"
-inputPath = "three_band"
+dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
+inputPath = "/dstl_satellite_data"
 _NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE = 512
 
 
-trainset = myDatasetClass(dir_path, inputPath)
-testset = myDatasetClass(dir_path, inputPath) #TODO: BAD! Use a real test dataset
-trainloader = DataLoader(trainset, batch_size=4, shuffle=True, num_workers=2)
-testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=2)
+trainset = datasetDSTL(dir_path, inputPath)
+testset = datasetDSTL(dir_path, inputPath) #TODO: BAD! Use a real test dataset
+trainloader = DataLoader(trainset, batch_size=1, shuffle=True, num_workers=4)
+testloader = DataLoader(testset, batch_size=1, shuffle=True, num_workers=4)
 
 classes = ('Buildings','MiscMan-made','Road','Track','Trees','Crops','Waterway','Standing_Water','Vehicle_Large','Vehicle_Small')
 
@@ -33,6 +33,7 @@ optimizer = optim.SGD( model.parameters(), lr=0.001, momentum=0.9 )
 for epoch in range(_NUM_EPOCHS_):
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
+        print(data)
         inputs, labels = data # Get the inputs for the network
         print(inputs)
         optimizer.zero_grad() # zero the parameter gradients

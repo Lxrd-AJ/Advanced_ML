@@ -12,7 +12,7 @@ Compound Convolution block with a ReLU activation function between the 2 blocks
 """
 class UNetConv2D( nn.Module ):
     def __init__(self, in_size, out_size, batch_norm):
-        super(UNetConv2, self).__init__()
+        super(UNetConv2D, self).__init__()
         self.kernel_size = 3
         if batch_norm:
             self.conv1 = nn.Sequential(
@@ -74,16 +74,16 @@ class UNet( nn.Module ):
 
         # Downsampling
         self.conv1 = UNetConv2D(self.in_channels, filters[0], self.is_batchnorm)
-        self.maxpool1 = nn.MaxPool2D(kernel_size=2)
+        self.maxpool1 = nn.MaxPool2d(kernel_size=2)
 
         self.conv2 = UNetConv2D(filters[0], filters[1], self.is_batchnorm)
-        self.maxpool2 = nn.MaxPool2D(kernel_size=2)
+        self.maxpool2 = nn.MaxPool2d(kernel_size=2)
 
         self.conv3 = UNetConv2D(filters[1], filters[2], self.is_batchnorm)
-        self.maxpool3 = nn.MaxPool2D(kernel_size=2)
+        self.maxpool3 = nn.MaxPool2d(kernel_size=2)
 
         self.conv4 = UNetConv2D(filters[2], filters[3], self.is_batchnorm)
-        self.maxpool4 = nn.MaxPool2D(kernel_size=2)
+        self.maxpool4 = nn.MaxPool2d(kernel_size=2)
         
         self.center = UNetConv2D(filters[3], filters[4], self.is_batchnorm)
 

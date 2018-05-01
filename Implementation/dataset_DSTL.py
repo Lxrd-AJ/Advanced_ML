@@ -4,6 +4,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 import numpy as np
 import tifffile as tiff
+import torch
 from data_import import generate_mask_for_image_and_class, _get_polygon_list
 
 
@@ -21,9 +22,9 @@ class datasetDSTL(Dataset):
             crange (tuple):     Defines the range of how strong the random crop for images can be. The direction is also chosen randomly
         """        
         
-        inpDir = str(dir_path)+str(inputPath)
+        inpDir = str(dir_path)+str(inputPath) + "/"
         inputs, imgIDs = self.getIDsAndFiles(inpDir)
-
+        
         self.res = res
         self.inputPath = inputPath
         self.dir_path = dir_path
@@ -76,7 +77,8 @@ class datasetDSTL(Dataset):
                 #d = _get_polygon_list(df,imageId,classType)
                 #polygons.append(d)
                 mask = generate_mask_for_image_and_class(res,imageId,classType,gs,df)
-                filename = str(dir_path)+'\\masks\\'+str(imageId)+'-'+str(classType)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png'
+                # filename = str(dir_path)+'\\masks\\'+str(imageId)+'-'+str(classType)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png'
+                filename = os.path.join(os.sep, dir_path, 'masks', str(imageId) + '-' + str(classType) + '-' + str(self.res[0]) + 'x' + str(self.res[1])) + ".png"
                 my_file = Path(filename)
                 if not my_file.is_file():
                     cv2.imwrite(filename,mask*255)
@@ -89,7 +91,8 @@ class datasetDSTL(Dataset):
         self.inputs = newInputs
 
     def saveNewImage(self, path, img, imageId):
-            filename = str(self.dir_path)+str(path)+str(imageId)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png'
+            # filename = str(self.dir_path)+str(path)+str(imageId)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png'
+            filename = os.path.join( os.sep, self.dir_path, path, str(imageId)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png')
             my_file = Path(filename)
             if not my_file.is_file():
                 cv2.imwrite(filename , img)
@@ -111,7 +114,8 @@ class datasetDSTL(Dataset):
                     imgIDs = imgIDs + images
                     imgIDs = [os.path.splitext(x)[0] for x in images]
 
-                images = [(str(inpDir)+str(dir)+'\\'+str(x)) for x in images]
+                # images = [(str(inpDir)+str(dir)+'\\'+str(x)) for x in images]
+                images = [os.path.join(os.sep, inpDir, dir, x) for x in images]
                 inputs = inputs + images
         return inputs, imgIDs
 
@@ -175,7 +179,11 @@ class datasetDSTL(Dataset):
         # numpy image: H x W x C
         # torch image: C X H X W
         # image = image.transpose((2, 0, 1))
-        return image
+        
+        # Added Cuda support http://pytorch.org/tutorials/beginner/former_torchies/tensor_tutorial.html#cuda-tensors
+        if torch.cuda.is_available():
+            return torch.from_numpy(image, device=torch.device('cuda'))    
+        return torch.from_numpy(image)
 
     def __getitem__(self, idx):
         strength = random.uniform(self.crange[0],self.crange[1])
