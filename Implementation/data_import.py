@@ -4,17 +4,6 @@ import cv2
 from shapely.wkt import loads as wkt_loads
 import tifffile as tiff
 
-def _get_image_names(base_path, imageId):
-    '''
-    Get the names of the tiff files
-    '''
-    d = {'3': path.join(base_path,'three_band/{}.tif'.format(imageId)),             # (3, 3348, 3403)
-         'A': path.join(base_path,'sixteen_band/{}_A.tif'.format(imageId)),         # (8, 134, 137)
-         'M': path.join(base_path,'sixteen_band/{}_M.tif'.format(imageId)),         # (8, 837, 851)
-         'P': path.join(base_path,'sixteen_band/{}_P.tif'.format(imageId)),         # (3348, 3403)
-         }
-    return d
-
 def _convert_coordinates_to_raster(coords, img_size, xymax):
     Xmax,Ymax = xymax
     H,W = img_size
@@ -56,7 +45,6 @@ def _get_and_convert_contours(polygonList, raster_img_size, xymax):
             interior_list.append(interior_c)
     return perim_list,interior_list
 
-
 def _plot_mask_from_contours(raster_img_size, contours, class_value = 1):
     img_mask = np.zeros(raster_img_size,np.uint8)
     if contours is None:
@@ -72,3 +60,46 @@ def generate_mask_for_image_and_class(raster_size, imageId, class_type, grid_siz
     contours = _get_and_convert_contours(polygon_list,raster_size,xymax)
     mask = _plot_mask_from_contours(raster_size,contours,1)
     return mask
+
+
+def mask_to_polygons(mask, epsilon=5, min_area=1.):
+    # __author__ = Konstantin Lopuhin
+    # https://www.kaggle.com/lopuhin/dstl-satellite-imagery-feature-detection/full-pipeline-demo-poly-pixels-ml-poly
+
+    # first, find contours with cv2: it's much faster than shapely
+    image, contours, hierarchy = cv2.findContours(
+        ((mask == 1) * 255).astype(np.uint8),
+        cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+    # create approximate contours to have reasonable submission size
+    approx_contours = [cv2.approxPolyDP(cnt, epsilon, True)
+                       for cnt in contours]
+    if not contours:
+        return MultiPolygon()
+    # now messy stuff to associate parent and child contours
+    cnt_children = defaultdict(list)
+    child_contours = set()
+    assert(hierarchy.shape[0] == 1)
+    # http://docs.opencv.org/3.1.0/d9/d8b/tutorial_py_contours_hierarchy.html
+    for idx, (_, _, _, parent_idx) in enumerate(hierarchy[0]):
+        if parent_idx != -1:
+            child_contours.add(idx)
+            cnt_children[parent_idx].append(approx_contours[idx])
+    # create actual polygons filtering by area (removes artifacts)
+    all_polygons = []
+    for idx, cnt in enumerate(approx_contours):
+        if idx not in child_contours and cv2.contourArea(cnt) >= min_area:
+            assert(cnt.shape[1] == 1)
+            poly = Polygon(
+                shell=cnt[:, 0, :],
+                holes=[c[:, 0, :] for c in cnt_children.get(idx, [])
+                       if cv2.contourArea(c) >= min_area])
+            all_polygons.append(poly)
+    # approximating polygons might have created invalid ones, fix them
+    all_polygons = MultiPolygon(all_polygons)
+    if not all_polygons.is_valid:
+        all_polygons = all_polygons.buffer(0)
+        # Sometimes buffer() converts a simple Multipolygon to just a Polygon,
+        # need to keep it a Multi throughout
+        if all_polygons.type == 'Polygon':
+            all_polygons = MultiPolygon([all_polygons])
+    return all_polygons
