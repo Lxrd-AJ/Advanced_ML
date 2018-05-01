@@ -20,14 +20,15 @@ class myDatasetClass(Dataset):
                 on a sample
         """
         inputs = os.listdir(str(dir_path)+str(inputPath))
-        inDir = 'input'
+        inDir = dir_path
         df = pd.read_csv(inDir + '/train_wkt_v4.csv')
         gs = pd.read_csv(inDir + '/grid_sizes.csv', names=['ImageId', 'Xmax', 'Ymin'], skiprows=1)
         labels = []      
         
         for i, file in enumerate(inputs):
             imageId = os.path.splitext(file)[0]
-            img = cv2.imread(str(dir_path)+str(inputPath)+str(file))
+            image_url = os.path.join( os.sep,dir_path,inputPath,file )
+            img = cv2.imread( image_url )
             height, width, channels = img.shape
             #polygons = []
             for classType in list(range(1,11)):

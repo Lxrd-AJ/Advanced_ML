@@ -1,1 +1,3 @@
 torchvision
+Shapely
+tifffile

@@ -1,13 +1,15 @@
+#!/bin/bash python
 import torch 
 import numpy as np 
 import torch.optim as optim
 import torch.nn as nn
+import os
 from dataset_DSTL import myDatasetClass 
 from torch.utils.data import DataLoader
 from unet_model import UNet
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-inputPath = "./dstl_satellite_data/input/three_band"
+dir_path = os.path.dirname(os.path.realpath(__file__)) + "/dstl_satellite_data/"
+inputPath = "three_band"
 _NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE = 512
@@ -32,6 +34,7 @@ for epoch in range(_NUM_EPOCHS_):
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         inputs, labels = data # Get the inputs for the network
+        print(inputs)
         optimizer.zero_grad() # zero the parameter gradients
 
         # Forward pass + Backward pass + Optimisation
@@ -59,3 +62,5 @@ with torch.no_grad():
 
 print('Accuracy of the network on the 10000 test images: %d %%' % (
     100 * correct / total))
+
+# export PYTHONPATH='/usr/local/lib/python3.5/dist-packages'
