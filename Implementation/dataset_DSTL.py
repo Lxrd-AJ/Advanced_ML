@@ -5,64 +5,157 @@ import pandas as pd
 import cv2
 from torch.utils.data import Dataset
 import numpy as np
-from data_import import generate_mask_for_image_and_class, _get_polygon_list 
+import tifffile as tiff
+from data_import import generate_mask_for_image_and_class, _get_polygon_list, _get_image_names
 
 
 class myDatasetClass(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, dir_path, inputPath, transform=None):
+    def __init__(self, dir_path, inputPath, channel='rgb-g' ,res=(0,0) ,transform=None):
         """
         Args:
-            dir_path (string): workingDirectory
-            inputPath (string): relative path to input images
-            transform (callable, optional): Optional transform to be applied
-                on a sample
-        """
-        inputs = os.listdir(str(dir_path)+str(inputPath))
-        inDir = 'input'
-        df = pd.read_csv(inDir + '/train_wkt_v4.csv')
-        gs = pd.read_csv(inDir + '/grid_sizes.csv', names=['ImageId', 'Xmax', 'Ymin'], skiprows=1)
-        labels = []      
+            dir_path (string):  Working Directory.
+            inputPath (string): Input directory with all the images.
+            channel (string):   Channels used for the input, eiter 'gray', 'rgb', 'rgb-g' (for rgb and gray) or 'all' (tbd).
+            res (tuple/list):    Resolution for the input images and masks. If 'all' is selected must be <= (132, 133) pixel.
+                                        If resolution == (0, 0) then it will remains unchanges for the data
+            transform (callable, optional): Optional transform to be applied on a sample.
+        """        
         
-        for i, file in enumerate(inputs):
-            imageId = os.path.splitext(file)[0]
-            img = cv2.imread(str(dir_path)+str(inputPath)+str(file))
-            height, width, channels = img.shape
-            #polygons = []
+        inpDir = str(dir_path)+str(inputPath)
+        inputs, imgIDs = self.getIDsAndFiles(inpDir)
+
+        self.res = res
+        self.inputPath = inputPath
+        self.dir_path = dir_path
+        self.imgIDs = imgIDs
+        self.channel = channel
+        self.transform = transform
+        df = pd.read_csv(inpDir + 'train_wkt_v4.csv')
+        gs = pd.read_csv(inpDir + 'grid_sizes.csv', names=['ImageId', 'Xmax', 'Ymin'], skiprows=1)
+        newInputs = []
+
+        if not ((channel=='rgb' or channel=='gray') and res == (0,0)):
+            for idx, imageId in enumerate(imgIDs):
+                if channel=='rgb':
+                    rgbImage = self.getImageType('rgb',imageId, inputs)
+                    rgbImage = cv2.resize(rgbImage, res)
+                    newInputs.append(self.saveNewImage('\\rgb-rscl\\',rgbImage, imageId))
+                else:
+                    if channel=='gray':
+                        grayImg = self.getImageType('gray',imageId, inputs)
+                        grayImg = cv2.resize(grayImg, res)
+                        newInputs.append(self.saveNewImage('\\gray\\',grayImg, imageId))
+                    else:
+                        if channel=='rgb-g':
+                            rgbImage = self.getImageType('rgb',imageId, inputs)
+                            grayImg = self.getImageType('gray',imageId, inputs)
+                            if res!=(0,0):
+                                rgbImage = cv2.resize(rgbImage, res)
+                                grayImg = cv2.resize(grayImg, res)
+                            rgbgImage = cv2.merge([rgbImage,grayImg])
+                            newInputs.append(self.saveNewImage('\\rgb-g\\',rgbgImage, imageId))
+            print('Processing Images: '+str((idx/len(imgIDs))*100)+'%')
+        else:
+            if(channel=='rgb'):
+                newInputs = [x for x in inputs if (not x.endswith('_P.tif') and not x.endswith('_M.tif') and not x.endswith('_A.tif'))]
+            else: 
+                if(channel=='gray'):
+                    newInputs = [x for x in inputs if x.endswith('_P.tif')]
+                #else: 
+                #    if(channel=='rgb-g'):
+                #        newInputs = [x for x in inputs if (not x.endswith('_P.tif') and not x.endswith('_A.tif'))]
+
+
+        if res == (0,0):
+            (width, height, depth) = cv2.imread(newInputs[0]).shape
+            res = (width,height)
+        masks = []
+        for idx, imageId in enumerate(imgIDs):
+            masksNames = []
             for classType in list(range(1,11)):
                 #d = _get_polygon_list(df,imageId,classType)
                 #polygons.append(d)
-                mask = generate_mask_for_image_and_class((width,height),imageId,classType,gs,df)
-                filename = str(dir_path)+'\\masks\\'+str(imageId)+'-'+str(classType)+'.png'
-                cv2.imwrite(filename,mask*255)            
-        #labels.append([imageId, polygons])
+                mask = generate_mask_for_image_and_class(res,imageId,classType,gs,df)
+                filename = str(dir_path)+'\\masks\\'+str(imageId)+'-'+str(classType)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png'
+                cv2.imwrite(filename,mask*255)
+                masksNames.append(filename)
+            masks.append( masksNames )
+            print('Processing Masks: '+str((idx/len(imgIDs))*100)+'%')
 
-        self.inputs = inputs
-        self.inputPath = inputPath
-        self.dir_path = dir_path
-        self.transform = transform
+        self.masks = masks
+        self.res = res
+        self.inputs = newInputs
+
+    def saveNewImage(self, path, img, imageId):
+            filename = str(self.dir_path)+str(path)+str(imageId)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png'
+            cv2.imwrite(filename , img)
+            return filename
+
+    def getIDsAndFiles(self, inpDir):
+        inputs = []
+        imgIDs = []
+
+        for p, subdirs, f in os.walk(inpDir):
+            for dir in subdirs:
+                images = os.listdir(str(inpDir)+str(dir))
+                for idx, filename in enumerate(images):
+                    n = len(filename)
+                    if filename.endswith(".tif") == False:
+                       images.pop(idx)
+
+                if (str(dir) == 'three_band'):
+                    imgIDs = imgIDs + images
+                    imgIDs = [os.path.splitext(x)[0] for x in images]
+
+                images = [(str(inpDir)+str(dir)+'\\'+str(x)) for x in images]
+                inputs = inputs + images
+        return inputs, imgIDs
+
+    def stretchMinMax(self, img):
+       if(len(img.shape)==2):
+            gray = img[:,:]
+            rmax = np.max(gray)
+            rmin = np.min(gray)
+            gray =  (255 * ((gray - rmin) / (rmax - rmin))).astype(np.uint8)
+            return gray
+       if (len(img[:,0,0])==3):
+            r = img[0,:,:]
+            rmax = np.max(r)
+            rmin = np.min(r)
+            ri =  (255 * ((r - rmin) / (rmax - rmin))).astype(np.uint8)
+            g = img[1,:,:]
+            gmax = np.max(g)
+            gmin = np.min(g)
+            b = img[2,:,:]
+            bmax = np.max(b)
+            bmin = np.min(b)
+            gi =  (255 * ((g - gmin) / (gmax - gmin))).astype(np.uint8)
+            bi =  (255 * ((b - bmin) / (bmax - bmin))).astype(np.uint8)
+            return cv2.merge([bi,gi,ri])
+
+    def getImageType(self, type,ImgId, inputs):
+        if (type == 'gray'):
+            imgFile = [x for x in inputs if x.endswith(str(ImgId)+'_P.tif')]
+        else:
+            if (type == 'rgb'):
+                imgFile = [x for x in inputs if x.endswith(str(ImgId)+'.tif')]
+        img = tiff.imread(imgFile[0])
+        imgPng = self.stretchMinMax(img)
+        return imgPng
 
     def __len__(self):
         return len(self.inputs)
 
     def __getitem__(self, idx):
-        file = self.inputs[idx]
-        image = cv2.imread(str(self.dir_path)+str(self.inputPath)+str(file), 1)
-
-        #For 8-bit conversion/RGB image plus & channels order gets inverted:
-        #image = cv2.imread(str(self.dir_path)+str(self.inputPath)+str(file), -1)
-        #image2 = image.copy()
-        #image2[:,:,0] = image[:,:,2]
-        #image2[:,:,1] = image[:,:,1]
-        #image2[:,:,2] = image[:,:,0]
-
-        imageId = os.path.splitext(file)[0]
-        masks = []
-        for classType in list(range(1,11)):
-            masks.append(cv2.imread(str(self.dir_path)+'\\masks\\'+str(imageId)+'-'+str(classType)+'.png'))
-
-        item = {'image': image, 'masks': masks}
+        imageId = self.imgIDs[idx]
+        image = cv2.imread(self.inputs[idx])
+        masks = self.masks[idx]
+        masksImgs = []
+        for maskFile in masks:
+            masksImgs.append(cv2.imread(maskFile))
+        item = {'image': image, 'masks': masksImgs}
 
         if self.transform:
             item = self.transform(item)
