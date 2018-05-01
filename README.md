@@ -7,7 +7,7 @@
 * General overview: https://blog.deepsense.ai/deep-learning-for-satellite-imagery-via-image-segmentation/
 
 - [x] Data Importing (Goal: 1x 20-channels image)
-	- [ ] Gray-Scale
+	- [x] Gray-Scale
 	- [x] 3-Band
 	- [ ] 16-Band
 - [x] Creatable Torch DataLoader
@@ -15,7 +15,7 @@
 	- [ ] Test dataset
 - [ ] Data Transformations
 	- [ ] Cropping
-	- [ ] Stretching
+	- [x] Resizing
 	- [ ] Rotations
 	
 - [ ] Mask-to-Polygon Transformation
