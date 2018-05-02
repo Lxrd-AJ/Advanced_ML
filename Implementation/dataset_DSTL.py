@@ -199,11 +199,6 @@ class datasetDSTL(Dataset):
         for maskFile in masks:
             # masksImgs.append(self.toTensor(self.randomCrop(cv2.imread(maskFile),dir,strength)))
             mask = cv2.imread(maskFile, cv2.IMREAD_GRAYSCALE)
-            print("MASK")
-            print(mask)
-            cv2.imshow("mask", mask)
-            print(mask.shape)
-            print()
             masksImgs.append( self.toTensor(mask) )
         masksImgs_ = torch.cat(masksImgs).view(len(masksImgs), self.res[0], self.res[1])
 

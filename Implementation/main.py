@@ -19,6 +19,8 @@ _NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE_ = 100
 
+print(torch.get_default_dtype())
+torch.set_default_tensor_type(torch.FloatTensor)
 
 trainset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_))
 testset = datasetDSTL(dir_path, inputPath) #TODO: BAD! Use a real test dataset
