@@ -4,6 +4,8 @@ import numpy as np
 import torch.optim as optim
 import torch.nn as nn
 import os
+import matplotlib.pyplot as plt
+import torchvision
 from dataset_DSTL import datasetDSTL
 from torch.utils.data import DataLoader
 from unet_model import UNet
@@ -18,19 +20,23 @@ inputPath = "/dstl_satellite_data"
 _NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE_ = 100
+_COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-print(torch.get_default_dtype())
+# print(torch.get_default_dtype())
 torch.set_default_tensor_type(torch.FloatTensor)
 
 trainset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_))
-testset = datasetDSTL(dir_path, inputPath) #TODO: BAD! Use a real test dataset
-trainloader = DataLoader(trainset, batch_size=1, shuffle=True, num_workers=4)
-testloader = DataLoader(testset, batch_size=1, shuffle=True, num_workers=4)
+testset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_)) #TODO: BAD! Use a real test dataset
+trainloader = DataLoader(trainset, batch_size=4, shuffle=True, num_workers=4)
+testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=4)
 
 classes = ('Buildings','MiscMan-made','Road','Track','Trees','Crops','Waterway','Standing_Water','Vehicle_Large','Vehicle_Small')
 
 # Model definition
 model = UNet( n_classes=len(classes), in_channels=_NUM_CHANNELS_ )
+if torch.cuda.device_count() > 1:
+    print("Training model on ", torch.cuda.device_count(), "GPUs!")
+    model = nn.DataParallel(model)
 
 # Loss function and Optimizer definitions
 criterion = nn.CrossEntropyLoss()
@@ -41,11 +47,13 @@ for epoch in range(_NUM_EPOCHS_):
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         # Get the inputs for the network
-        inputs = Variable(data['image'])
-        labels = Variable(data['masks'])
-        print(inputs)
-        print("Labels")
-        print(labels)
+        inputs = data['image'].to(_COMPUTE_DEVICE_) #Variable(data['image']).to(_COMPUTE_DEVICE_)
+        labels = data['masks'].to(_COMPUTE_DEVICE_) #Variable(data['masks']).to(_COMPUTE_DEVICE_)
+        # plt.imshow( torchvision.utils.make_grid(inputs) )
+        # plt.show()
+        # print(inputs)
+        # print("Labels")
+        # print(labels)
         optimizer.zero_grad() # zero the parameter gradients
 
         # Forward pass + Backward pass + Optimisation

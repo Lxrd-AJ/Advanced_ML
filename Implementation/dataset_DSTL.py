@@ -184,8 +184,8 @@ class datasetDSTL(Dataset):
             image = image.transpose((2,0,1))
 
         # Added Cuda support http://pytorch.org/tutorials/beginner/former_torchies/tensor_tutorial.html#cuda-tensors
-        if torch.cuda.is_available():
-            return torch.from_numpy(image, device=torch.device('cuda'))    
+        # if torch.cuda.is_available():
+        #     return torch.from_numpy(image, device=torch.device('cuda'))    
         return torch.from_numpy(image)
 
     def __getitem__(self, idx):
