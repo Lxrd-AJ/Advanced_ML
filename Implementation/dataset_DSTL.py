@@ -180,17 +180,10 @@ class datasetDSTL(Dataset):
         # torch image: C X H X W
         # image = image.transpose((2, 0, 1))
         # TODO: Refactor this code here
-        if image.shape[0] == self.res[0]:
+        if len(image.shape) == 3 and image.shape[0] == self.res[0]:
             image = image.transpose((2,0,1))
-        
-        print(image.shape)
-        return torch.from_numpy(image)
-
-        if type(image) == 'torch.DoubleTensor':
-            return image
 
         # Added Cuda support http://pytorch.org/tutorials/beginner/former_torchies/tensor_tutorial.html#cuda-tensors
-        image = image.astype(np.float)
         if torch.cuda.is_available():
             return torch.from_numpy(image, device=torch.device('cuda'))    
         return torch.from_numpy(image)
@@ -205,7 +198,7 @@ class datasetDSTL(Dataset):
 
         for maskFile in masks:
             # masksImgs.append(self.toTensor(self.randomCrop(cv2.imread(maskFile),dir,strength)))
-            mask = cv2.imread(maskFile)
+            mask = cv2.imread(maskFile, cv2.IMREAD_GRAYSCALE)
             print("MASK")
             print(mask)
             cv2.imshow("mask", mask)
