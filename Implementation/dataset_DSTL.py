@@ -4,7 +4,6 @@ import pandas as pd
 from torch.utils.data import Dataset
 import numpy as np
 import tifffile as tiff
-import torch
 from data_import import generate_mask_for_image_and_class, _get_polygon_list
 
 
@@ -164,7 +163,7 @@ class datasetDSTL(Dataset):
 
         ox = int(x_new*w)
         oy = int(y_new*h)
-        non = lambda s: s if s<0 else None
+        non = lambda s: s if s < 0 else None
         mom = lambda s: max(0,s)
         shift_img = np.zeros_like(image)
         shift_img[mom(oy):non(oy), mom(ox):non(ox)] = image[mom(-oy):non(-oy), mom(-ox):non(-ox)]
@@ -189,19 +188,30 @@ class datasetDSTL(Dataset):
         return torch.from_numpy(image)
 
     def __getitem__(self, idx):
-        strength = random.uniform(self.crange[0],self.crange[1])
-        dir = np.random.randint(0,360) 
+        r =  random.random()
+        probCrop = 0.1
         imageId = self.imgIDs[idx]
-        image = self.toTensor(self.randomCrop(cv2.imread(self.inputs[idx],cv2.IMREAD_UNCHANGED),dir,strength))
+        image = cv2.imread(self.inputs[idx],cv2.IMREAD_UNCHANGED)
+        if (r<=probCrop):
+            strength = random.uniform(self.crange[0],self.crange[1])
+            dir = np.random.randint(0,360) 
+            image = self.randomCrop(image,dir,strength)
+        image = self.toTensor(image)
         masks = self.masks[idx]
         masksImgs = []
 
         for maskFile in masks:
             # masksImgs.append(self.toTensor(self.randomCrop(cv2.imread(maskFile),dir,strength)))
             mask = cv2.imread(maskFile, cv2.IMREAD_GRAYSCALE)
+            if (r<=probCrop):
+                mask = self.randomCrop(mask,dir,strength)
+            #print("MASK")
+            #print(mask)
+            #cv2.imshow("mask", mask)
+            #print(mask.shape)
+            #print()
             masksImgs.append( self.toTensor(mask) )
         masksImgs_ = torch.cat(masksImgs).view(len(masksImgs), self.res[0], self.res[1])
-
         item = {'image': image, 'masks': masksImgs_}
 
         return item
