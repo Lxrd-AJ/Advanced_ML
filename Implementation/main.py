@@ -7,15 +7,16 @@ import os
 from dataset_DSTL import datasetDSTL
 from torch.utils.data import DataLoader
 from unet_model import UNet
+from torch.autograd import Variable  
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "/dstl_satellite_data"
 _NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
-_IMAGE_SIZE = 512
+_IMAGE_SIZE_ = 100
 
 
-trainset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(100,100))
+trainset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_))
 testset = datasetDSTL(dir_path, inputPath) #TODO: BAD! Use a real test dataset
 trainloader = DataLoader(trainset, batch_size=1, shuffle=True, num_workers=4)
 testloader = DataLoader(testset, batch_size=1, shuffle=True, num_workers=4)
@@ -33,9 +34,12 @@ optimizer = optim.SGD( model.parameters(), lr=0.001, momentum=0.9 )
 for epoch in range(_NUM_EPOCHS_):
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
-        print(data)
-        inputs, labels = data # Get the inputs for the network
+        # Get the inputs for the network
+        inputs = Variable(data['image'])
+        labels = Variable(data['masks'])
         print(inputs)
+        print("Labels")
+        print(labels)
         optimizer.zero_grad() # zero the parameter gradients
 
         # Forward pass + Backward pass + Optimisation
