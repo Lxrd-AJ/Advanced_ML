@@ -178,10 +178,13 @@ class datasetDSTL(Dataset):
         # swap color axis because
         # numpy image: H x W x C
         # torch image: C X H X W
-        image = image.transpose((2, 0, 1))
+        # image = image.transpose((2, 0, 1))
+        # TODO: Refactor this code here
+        if image.shape[0] == self.res[0]:
+            image = image.transpose((2,0,1))
         
-        print(type(image))
-        return image
+        print(image.shape)
+        return torch.from_numpy(image)
 
         if type(image) == 'torch.DoubleTensor':
             return image
@@ -201,8 +204,16 @@ class datasetDSTL(Dataset):
         masksImgs = []
 
         for maskFile in masks:
-            masksImgs.append(self.toTensor(self.randomCrop(cv2.imread(maskFile),dir,strength)))
-        masksImgs = torch.from_numpy(np.array(masksImgs))
-        item = {'image': self.toTensor(image), 'masks': masksImgs}
+            # masksImgs.append(self.toTensor(self.randomCrop(cv2.imread(maskFile),dir,strength)))
+            mask = cv2.imread(maskFile)
+            print("MASK")
+            print(mask)
+            cv2.imshow("mask", mask)
+            print(mask.shape)
+            print()
+            masksImgs.append( self.toTensor(mask) )
+        masksImgs_ = torch.cat(masksImgs).view(len(masksImgs), self.res[0], self.res[1])
+
+        item = {'image': image, 'masks': masksImgs_}
 
         return item
