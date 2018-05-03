@@ -9,7 +9,7 @@
 - [x] Data Importing (Goal: 1x 20-channels image)
 	- [x] Gray-Scale
 	- [x] 3-Band
-	- [ ] 16-Band
+	- [x] 16-Band
 - [x] Creatable Torch DataLoader
 - [x] Data Transformations
 	- [x] Random-cropping
