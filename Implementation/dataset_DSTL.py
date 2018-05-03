@@ -44,7 +44,7 @@ class datasetDSTL(Dataset):
                     if channel=='gray':
                         grayImg = self.getImageType('gray',imageId, inputs)
                         grayImg = cv2.resize(grayImg, res)
-                        newInputs.append(self.saveNewImage('\\gray\\',grayImg, imageId))
+                        newInputs.append(self.saveNewImage('gray',grayImg, imageId))
                     else:
                         if channel=='rgb-g':
                             rgbImage = self.getImageType('rgb',imageId, inputs)
@@ -53,7 +53,7 @@ class datasetDSTL(Dataset):
                                 rgbImage = cv2.resize(rgbImage, res)
                                 grayImg = cv2.resize(grayImg, res)
                             rgbgImage = cv2.merge([rgbImage,grayImg])
-                            newInputs.append(self.saveNewImage('\\rgb-g\\',rgbgImage, imageId))
+                            newInputs.append(self.saveNewImage('rgb-g',rgbgImage, imageId))
                 print('Processing Images: '+str((idx/len(imgIDs))*100)+'%')
         else:
             if(channel=='rgb'):
