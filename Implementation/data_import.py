@@ -4,6 +4,29 @@ import cv2
 from shapely.wkt import loads as wkt_loads
 import tifffile as tiff
 
+# Works only for 1 and 3 channel images!
+def convTifToPng(self, img):
+    if(len(img.shape)==2):
+        gray = img[:,:]
+        rmax = np.max(gray)
+        rmin = np.min(gray)
+        gray =  (255 * ((gray - rmin) / (rmax - rmin))).astype(np.uint8)
+        return gray
+    if (len(img[:,0,0])==3):
+        r = img[0,:,:]
+        rmax = np.max(r)
+        rmin = np.min(r)
+        ri =  (255 * ((r - rmin) / (rmax - rmin))).astype(np.uint8)
+        g = img[1,:,:]
+        gmax = np.max(g)
+        gmin = np.min(g)
+        b = img[2,:,:]
+        bmax = np.max(b)
+        bmin = np.min(b)
+        gi =  (255 * ((g - gmin) / (gmax - gmin))).astype(np.uint8)
+        bi =  (255 * ((b - bmin) / (bmax - bmin))).astype(np.uint8)
+        return cv2.merge([bi,gi,ri])
+
 def _convert_coordinates_to_raster(coords, img_size, xymax):
     Xmax,Ymax = xymax
     H,W = img_size
