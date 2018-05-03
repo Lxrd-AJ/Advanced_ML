@@ -212,7 +212,7 @@ class datasetDSTL(Dataset):
 
     def __getitem__(self, idx):
         r =  random.random()
-        probCrop = 0.99
+        probCrop = 0.1
         imageId = self.imgIDs[idx]
         #image = cv2.imread(self.inputs[idx],cv2.IMREAD_UNCHANGED)
         image = tiff.imread(self.inputs[idx])
