@@ -12,6 +12,7 @@
 	- [x] 16-Band
 - [x] Creatable Torch DataLoader
 - [x] Data Transformations
+	- [ ] Up-scaling	
 	- [x] Random-cropping
 	- [x] Resizing
 	- [ ] Rotations
@@ -23,6 +24,10 @@
 	- https://www.kaggle.com/jeffhebert/stitch-a-16-channel-image-together
 	- https://www.kaggle.com/torrinos/exploration-and-plotting?scriptVersionId=558039
 - [ ] Report
+	- [ ] Describing raw data (James)
+	- [ ] Goal & methods/frameworks used (James)
+	- [ ] Implementation/ steps (Philipp)
+	- [ ] Results & difficulties (Philipp)
 
 # Model Construction and Training (AJ and Ahmed)
 - Important links
