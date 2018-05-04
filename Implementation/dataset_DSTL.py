@@ -15,7 +15,7 @@ class datasetDSTL(Dataset):
         Args:
             dir_path (string):  Working Directory.
             inputPath (string): Input directory with all the images.
-            channel (string):   Channels used for the input, eiter 'gray', 'rgb', 'rgb-g' (for rgb and gray) or 'all' (tbd).
+            channel (string):   Channels used for the input, eiter 'gray', 'rgb', 'rgb-g' (for rgb and gray) or 'all' (then resolution needs to be chosen).
             res (tuple/list):   Resolution for the input images and masks. If 'all' is selected must be <= (132, 133) pixel.
                                 If resolution == (0, 0) then it will remains unchanges for the data
             crange (tuple):     Defines the range of how strong the random crop for images can be. The direction is also chosen randomly
@@ -44,7 +44,7 @@ class datasetDSTL(Dataset):
                     if channel=='gray':
                         grayImg = self.getImageType('gray',imageId, inputs)
                         grayImg = cv2.resize(grayImg, res)
-                        newInputs.append(self.saveNewImage('\\gray\\',grayImg, imageId))
+                        newInputs.append(self.saveNewImage('gray',grayImg, imageId))
                     else:
                         if channel=='rgb-g':
                             rgbImage = self.getImageType('rgb',imageId, inputs)
@@ -53,7 +53,19 @@ class datasetDSTL(Dataset):
                                 rgbImage = cv2.resize(rgbImage, res)
                                 grayImg = cv2.resize(grayImg, res)
                             rgbgImage = cv2.merge([rgbImage,grayImg])
-                            newInputs.append(self.saveNewImage('\\rgb-g\\',rgbgImage, imageId))
+                            newInputs.append(self.saveNewImage('rgb-g',rgbgImage, imageId))
+                        else:
+                          if channel=='all':
+                            rgbImage = self.getImageType('rgb',imageId, inputs)
+                            grayImg = self.getImageType('gray',imageId, inputs)
+                            A8c, M8c = self.getImageType('16c',imageId, inputs)
+                            rgbImage = cv2.resize(rgbImage, res)
+                            grayImg = cv2.resize(grayImg, res)
+                            A8c = cv2.resize(A8c, res)
+                            M8c = cv2.resize(M8c, res)
+                            c20Image = cv2.merge([rgbImage,grayImg, A8c, M8c])
+                            newInputs.append(self.saveNewImage('20c', c20Image, imageId))
+
                 print('Processing Images: '+str((idx/len(imgIDs))*100)+'%')
         else:
             if(channel=='rgb'):
@@ -61,10 +73,6 @@ class datasetDSTL(Dataset):
             else: 
                 if(channel=='gray'):
                     newInputs = [x for x in inputs if x.endswith('_P.tif')]
-                #else: 
-                #    if(channel=='rgb-g'):
-                #        newInputs = [x for x in inputs if (not x.endswith('_P.tif') and not x.endswith('_A.tif'))]
-
 
         if res == (0,0):
             (width, height, depth) = cv2.imread(newInputs[0]).shape
@@ -91,10 +99,12 @@ class datasetDSTL(Dataset):
 
     def saveNewImage(self, path, img, imageId):
             # filename = str(self.dir_path)+str(path)+str(imageId)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png'
-            filename = os.path.join( os.sep, self.dir_path, path, str(imageId)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png')
+            filename = os.path.join( os.sep, self.dir_path, path, str(imageId)+'-'+str(self.res[0])+'x'+str(self.res[1]))
+            if len(img.shape) == 3:
+                img = img.transpose((2,0,1))
             my_file = Path(filename)
             if not my_file.is_file():
-                cv2.imwrite(filename , img)
+                tiff.imsave(filename , img)
             return filename
 
     def getIDsAndFiles(self, inpDir):
@@ -146,9 +156,21 @@ class datasetDSTL(Dataset):
         else:
             if (type == 'rgb'):
                 imgFile = [x for x in inputs if x.endswith(str(ImgId)+'.tif')]
+            else:
+                if (type == '16c'):
+                    imgFile = [x for x in inputs if x.endswith(str(ImgId)+'_A.tif')]
+                    imgFile2 = [x for x in inputs if x.endswith(str(ImgId)+'_M.tif')]
+                    img = tiff.imread(imgFile[0])
+                    img2 = tiff.imread(imgFile2[0])
+                    img = img.transpose((1,2,0))
+                    img2 = img2.transpose((1,2,0))
+                    return img, img2
+
         img = tiff.imread(imgFile[0])
-        imgPng = self.stretchMinMax(img)
-        return imgPng
+        if len(img.shape) == 3:
+            img = img.transpose((1,2,0))
+        #imgPng = self.stretchMinMax(img)
+        return img
 
     def __len__(self):
         return len(self.inputs)
@@ -179,19 +201,21 @@ class datasetDSTL(Dataset):
         # torch image: C X H X W
         # image = image.transpose((2, 0, 1))
         # TODO: Refactor this code here
-        if len(image.shape) == 3 and image.shape[0] == self.res[0]:
+        if len(image.shape) == 3 and image.shape[2] < 21:
             image = image.transpose((2,0,1))
 
         # Added Cuda support http://pytorch.org/tutorials/beginner/former_torchies/tensor_tutorial.html#cuda-tensors
         # if torch.cuda.is_available():
-        #     return torch.from_numpy(image, device=torch.device('cuda'))    
+        #     return torch.from_numpy(image, device=torch.device('cuda'))  
+        image = image.astype('int16')
         return torch.from_numpy(image)
 
     def __getitem__(self, idx):
         r =  random.random()
         probCrop = 0.1
         imageId = self.imgIDs[idx]
-        image = cv2.imread(self.inputs[idx],cv2.IMREAD_UNCHANGED)
+        #image = cv2.imread(self.inputs[idx],cv2.IMREAD_UNCHANGED)
+        image = tiff.imread(self.inputs[idx])
         if (r<=probCrop):
             strength = random.uniform(self.crange[0],self.crange[1])
             dir = np.random.randint(0,360) 
@@ -210,7 +234,7 @@ class datasetDSTL(Dataset):
             #cv2.imshow("mask", mask)
             #print(mask.shape)
             #print()
-            masksImgs.append( self.toTensor(mask) )
+            masksImgs.append(self.toTensor(mask) )
         masksImgs_ = torch.cat(masksImgs).view(len(masksImgs), self.res[0], self.res[1])
         item = {'image': image, 'masks': masksImgs_}
 
