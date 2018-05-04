@@ -21,6 +21,7 @@
 	- https://www.kaggle.com/torrinos/exploration-and-plotting?scriptVersionId=558039
 	- https://www.kaggle.com/visoft/export-pixel-wise-mask/code
 	- https://www.kaggle.com/jeffhebert/stitch-a-16-channel-image-together
+	- https://www.kaggle.com/torrinos/exploration-and-plotting?scriptVersionId=558039
 - [ ] Report
 
 # Model Construction and Training (AJ and Ahmed)

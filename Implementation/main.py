@@ -11,12 +11,12 @@ from torch.utils.data import DataLoader
 from unet_model import UNet
 from torch.autograd import Variable  
 
-def showImages( tensor ):
-    for i in tensor.size()[0]:
-        pass
+# def showImages( tensor ):
+#     for i in tensor.size()[0]:
+#         pass
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
-inputPath = "/dstl_satellite_data"
+inputPath = "dstl_satellite_data"
 _NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE_ = 100

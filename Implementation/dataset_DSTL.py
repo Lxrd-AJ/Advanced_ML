@@ -21,7 +21,7 @@ class datasetDSTL(Dataset):
             crange (tuple):     Defines the range of how strong the random crop for images can be. The direction is also chosen randomly
         """        
         
-        inpDir = str(dir_path)+str(inputPath) + "/"
+        inpDir = os.path.join(os.sep, dir_path, inputPath) #str(dir_path)+str(inputPath) + "/"
         inputs, imgIDs = self.getIDsAndFiles(inpDir)
         
         self.res = res
@@ -103,7 +103,7 @@ class datasetDSTL(Dataset):
 
         for p, subdirs, f in os.walk(inpDir):
             for dir in subdirs:
-                images = os.listdir(str(inpDir)+str(dir))
+                images = os.listdir(os.path.join(os.sep, inpDir, dir))
                 for idx, filename in enumerate(images):
                     n = len(filename)
                     if filename.endswith(".tif") == False:
