@@ -193,7 +193,7 @@ class datasetDSTL(Dataset):
         #cv2.waitKey(0)
         return shift_img
 
-    def toTensor(self, image):
+    def toTensor(self, image, dtype='float32'):
         # is this necessary? The image can contain also other channels ...
 
         # swap color axis because
@@ -207,7 +207,7 @@ class datasetDSTL(Dataset):
         # Added Cuda support http://pytorch.org/tutorials/beginner/former_torchies/tensor_tutorial.html#cuda-tensors
         # if torch.cuda.is_available():
         #     return torch.from_numpy(image, device=torch.device('cuda'))  
-        image = image.astype('int16')
+        image = image.astype(dtype)
         return torch.from_numpy(image)
 
     def __getitem__(self, idx):

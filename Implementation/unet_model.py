@@ -119,4 +119,7 @@ class UNet( nn.Module ):
 
         final = self.final(up1)
 
+        final = F.upsample(final, inputs.size()[2:], mode='bilinear') 
+        final = F.softmax(final) 
+
         return final 

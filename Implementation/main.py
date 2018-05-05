@@ -15,11 +15,14 @@ from torch.autograd import Variable
 #     for i in tensor.size()[0]:
 #         pass
 
+def jacquard_index( predicted,target ):
+    pass
+
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
-inputPath = "dstl_satellite_data"
+inputPath = "dstl_satellite_data/"
 _NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
-_IMAGE_SIZE_ = 100
+_IMAGE_SIZE_ = 350
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # print(torch.get_default_dtype())
@@ -27,8 +30,8 @@ torch.set_default_tensor_type(torch.FloatTensor)
 
 trainset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_))
 testset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_)) #TODO: BAD! Use a real test dataset
-trainloader = DataLoader(trainset, batch_size=4, shuffle=True, num_workers=4)
-testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=4)
+trainloader = DataLoader(trainset, batch_size=8, shuffle=True, num_workers=4)
+testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=4)
 
 classes = ('Buildings','MiscMan-made','Road','Track','Trees','Crops','Waterway','Standing_Water','Vehicle_Large','Vehicle_Small')
 
@@ -39,7 +42,7 @@ if torch.cuda.device_count() > 1:
     model = nn.DataParallel(model)
 
 # Loss function and Optimizer definitions
-criterion = nn.CrossEntropyLoss()
+criterion = nn.BCELoss() #nn.MSELoss() #nn.CrossEntropyLoss()
 optimizer = optim.SGD( model.parameters(), lr=0.001, momentum=0.9 )
 
 # Network training
@@ -49,15 +52,12 @@ for epoch in range(_NUM_EPOCHS_):
         # Get the inputs for the network
         inputs = data['image'].to(_COMPUTE_DEVICE_) #Variable(data['image']).to(_COMPUTE_DEVICE_)
         labels = data['masks'].to(_COMPUTE_DEVICE_) #Variable(data['masks']).to(_COMPUTE_DEVICE_)
-        # plt.imshow( torchvision.utils.make_grid(inputs) )
-        # plt.show()
-        # print(inputs)
-        # print("Labels")
-        # print(labels)
+
         optimizer.zero_grad() # zero the parameter gradients
 
         # Forward pass + Backward pass + Optimisation
         outputs = model(inputs)
+        # labels = labels.long() # CrossEntropyLoss requires dtype long
         loss = criterion( outputs, labels )
         loss.backward()
         optimizer.step()
@@ -65,8 +65,11 @@ for epoch in range(_NUM_EPOCHS_):
         #Print statistics
         # TODO: Add Jacquard metric here
         running_loss += loss.item()
-        if i % 5 == 4: # Print every 5 mini-batches
-            print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, running_loss / 5))
+        # if i % 5 == 4: # Print every 5 mini-batches
+        print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) #running_loss / 5
+
+        #Debugging only, save current output to disk
+        torchvision.utils.save_image(outputs, "cur_output.png")
 
 print("Training complete .....")
 
