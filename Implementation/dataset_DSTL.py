@@ -88,7 +88,7 @@ class datasetDSTL(Dataset):
                 filename = os.path.join(os.sep, dir_path, 'masks', str(imageId) + '-' + str(classType) + '-' + str(self.res[0]) + 'x' + str(self.res[1])) + ".png"
                 my_file = Path(filename)
                 if not my_file.is_file():
-                    cv2.imwrite(filename,mask*255)
+                    cv2.imwrite(filename,mask) #*255
                 masksNames.append(filename)
             masks.append( masksNames )
             print('Processing Masks: '+str((idx/len(imgIDs))*100)+'%')
@@ -226,7 +226,7 @@ class datasetDSTL(Dataset):
 
         for maskFile in masks:
             # masksImgs.append(self.toTensor(self.randomCrop(cv2.imread(maskFile),dir,strength)))
-            mask = cv2.imread(maskFile, cv2.IMREAD_GRAYSCALE)
+            mask = cv2.imread(maskFile, cv2.IMREAD_GRAYSCALE)           
             if (r<=probCrop):
                 mask = self.randomCrop(mask,dir,strength)
             #print("MASK")
