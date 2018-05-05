@@ -20,6 +20,7 @@ def jacquard_index( predicted,target ):
     pass
 
 
+#TODO: [Bug] Fix visdom server which is not working
 viz_board = visdom.Visdom()
 viz_board.text("Hello Cruel ML World")
 
@@ -47,7 +48,7 @@ if torch.cuda.device_count() > 1:
     model = nn.DataParallel(model)
 
 # Loss function and Optimizer definitions
-criterion = nn.BCELoss() #nn.MSELoss() #nn.CrossEntropyLoss()
+criterion = nn.BCELoss() 
 optimizer = optim.SGD( model.parameters(), lr=0.001, momentum=0.9 )
 
 # Network training
@@ -64,7 +65,7 @@ for epoch in range(_NUM_EPOCHS_):
         outputs = model(inputs)
 
         # Visualise the outputs of the current network
-        viz_board.images(outputs.clone(), nrow=5)
+        viz_board.images(torch.Tensor(outputs), nrow=5)
 
         loss = criterion( outputs, labels )
         loss.backward()
@@ -73,8 +74,8 @@ for epoch in range(_NUM_EPOCHS_):
         #Print statistics
         # TODO: Add Jacquard metric here
         running_loss += loss.item()
-        #TODO: Log the loss to a file here
-        print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) #running_loss / 5
+        #TODO: Add the training loss to visdom
+        print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) 
 
         # TODO: [Visualisation] Add confusion matrix and Running metrics
         # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py

@@ -55,15 +55,10 @@ class UNetUpConv2D( nn.Module ):
     def forward(self, inputs1, inputs2):
         outputs2 = self.up_conv(inputs2)
         # Make `outputs1` equal sizes with `outputs2`
-        offset = outputs2.size()[2] - inputs1.size()[2]
-        print("Output2s size = {:}".format(outputs2.size()))
-        print("Input1s size = {:}".format(inputs1.size()))
-        print("Offset difference = " + str(offset))
+        offset = outputs2.size()[2] - inputs1.size()[2]        
         # padding = 2 * [offset // 2, offset // 2] 
         padding = 2 * [offset // 2, int(offset / 2)]
-        print("Padding {:}".format(padding))
         outputs1 = F.pad(inputs1, padding)
-        print("New Outputs 1s' size = {:}\n".format(outputs1.size()))
         return self.conv( torch.cat([outputs1,outputs2],1) )
 
 
@@ -125,7 +120,7 @@ class UNet( nn.Module ):
 
         final = self.final(up1)
 
-        final = F.upsample(final, inputs.size()[2:], mode='bilinear') 
-        final = F.softmax(final) 
+        final = F.upsample(final, inputs.size()[2:], mode='bilinear',align_corners=True) 
+        final = F.sigmoid(final) 
 
         return final 
