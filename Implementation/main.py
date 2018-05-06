@@ -65,7 +65,7 @@ for epoch in range(_NUM_EPOCHS_):
         outputs = model(inputs)
 
         # Visualise the outputs of the current network
-        viz_board.images(torch.Tensor(outputs), nrow=5)
+        viz_board.images(outputs.data, nrow=5) #TODO: Fix this as it expects a 3-channel tensor
 
         loss = criterion( outputs, labels )
         loss.backward()
@@ -74,6 +74,8 @@ for epoch in range(_NUM_EPOCHS_):
         #Print statistics
         # TODO: Add Jacquard metric here
         running_loss += loss.item()
+        with open('loss.txt','a+') as file:
+            file.write("{:}\n".format(loss.item()))
         #TODO: Add the training loss to visdom
         print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) 
 

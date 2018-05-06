@@ -33,15 +33,8 @@
 - Important links
 	- https://github.com/Lextal/pspnet-pytorch
 - [x] UNet Implementation
-- [ ] Model training
-
-# Model Evaluation (AJ and Ahmed)
-- [ ] Convert predictions into the right format for submissions (1 person, Jeff)
-	- [ ] Model validation
-	- [ ] Analysis on the performance of the model
-	- https://www.kaggle.com/shawn775/polygon-transformation-to-match-image?scriptVersionId=624248
-
-
+- [x] Model training
+- [ ] Model validation
 
 
 
