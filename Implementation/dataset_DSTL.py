@@ -1,4 +1,5 @@
-import os, random, cv2, torch
+import os, random, torch
+import cv2
 from pathlib import Path
 import pandas as pd
 from torch.utils.data import Dataset
@@ -95,6 +96,7 @@ class datasetDSTL(Dataset):
 
         self.masks = masks
         self.res = res
+        random.shuffle(newInputs)
         self.inputs = newInputs
 
     def saveNewImage(self, path, img, imageId):
@@ -111,9 +113,11 @@ class datasetDSTL(Dataset):
         inputs = []
         imgIDs = []
 
-        for p, subdirs, f in os.walk(inpDir):
+        for p, subdirs, f in os.walk(inpDir):     
+            # print(subdirs)       
             for dir in subdirs:
-                images = os.listdir(os.path.join(os.sep, inpDir, dir))
+                # print(dir)
+                images = os.listdir(os.path.join(os.sep, inpDir, dir))                
                 for idx, filename in enumerate(images):
                     n = len(filename)
                     if filename.endswith(".tif") == False:
@@ -123,8 +127,8 @@ class datasetDSTL(Dataset):
                     imgIDs = imgIDs + images
                     imgIDs = [os.path.splitext(x)[0] for x in images]
 
-                # images = [(str(inpDir)+str(dir)+'\\'+str(x)) for x in images]
-                images = [os.path.join(os.sep, inpDir, dir, x) for x in images]
+                # images = [(str(inpDir)+str(dir)+'\\'+str(x)) for x in images]                
+                images = [os.path.join(os.sep, inpDir, dir, x) for x in images]                
                 inputs = inputs + images
         return inputs, imgIDs
 

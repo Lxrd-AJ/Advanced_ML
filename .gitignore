@@ -1,6 +1,14 @@
+<<<<<<< HEAD
 Implementation/dstl_satellite_data/
 Implementation/masks/
 Implementation/rgb-g/
 Implementation/rgb-rscl/
 */__pycache__/
 runs
+=======
+Implementation/dstl_satellite_data/
+Implementation/masks/
+Implementation/rgb-g/
+Implementation/rgb-rscl/
+*/__pycache__/
+>>>>>>> e7e7c1709f0425ce22c3b4e435f6f0c6d168361b
