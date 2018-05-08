@@ -6,7 +6,7 @@ from torch.autograd import Variable
 """
 # TODO
 - [x] Add documentation for `UNetConv2D` module
-- [ ] Add CUDA support 
+- [x] Add CUDA support 
 
 Compound Convolution block with a ReLU activation function between the 2 blocks
 """
@@ -55,8 +55,9 @@ class UNetUpConv2D( nn.Module ):
     def forward(self, inputs1, inputs2):
         outputs2 = self.up_conv(inputs2)
         # Make `outputs1` equal sizes with `outputs2`
-        offset = outputs2.size()[2] - inputs1.size()[2]
-        padding = 2 * [offset // 2, offset // 2]
+        offset = outputs2.size()[2] - inputs1.size()[2]        
+        # padding = 2 * [offset // 2, offset // 2] 
+        padding = 2 * [offset // 2, int(offset / 2)]
         outputs1 = F.pad(inputs1, padding)
         return self.conv( torch.cat([outputs1,outputs2],1) )
 
@@ -68,7 +69,7 @@ class UNet( nn.Module ):
         self.is_deconv = True
         self.in_channels = in_channels
         self.is_batchnorm = True
-        self.feature_scale = 4 # For reducing the output sizes, change to 1 during final training
+        self.feature_scale = 2 # For reducing the no. output filters, change to 1 during final training
 
         filters = [int(x/self.feature_scale) for x in [64, 128, 256, 512, 1024]]
 
@@ -118,5 +119,8 @@ class UNet( nn.Module ):
         up1 = self.up_conv1( c1, up2 )
 
         final = self.final(up1)
+
+        final = F.upsample(final, inputs.size()[2:], mode='bilinear',align_corners=True) 
+        final = F.sigmoid(final) 
 
         return final 
