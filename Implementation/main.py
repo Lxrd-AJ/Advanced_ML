@@ -11,18 +11,11 @@ from dataset_DSTL import datasetDSTL
 from torch.utils.data import DataLoader
 from unet_model import UNet
 from torch.autograd import Variable  
-
-# def showImages( tensor ):
-#     for i in tensor.size()[0]:
-#         pass
-
-def jacquard_index( predicted,target ):
-    pass
+from tensorboardX import SummaryWriter
 
 
-#TODO: [Bug] Fix visdom server which is not working
-viz_board = visdom.Visdom()
-viz_board.text("Hello Cruel ML World")
+#TODO: [Bug] Fix visdom server which is not working OR use Pytorch-tensorboard instead https://github.com/lanpa/tensorboard-pytorch
+board_writer = SummaryWriter()
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data/"
@@ -64,8 +57,8 @@ for epoch in range(_NUM_EPOCHS_):
         # Forward pass + Backward pass + Optimisation
         outputs = model(inputs)
 
-        # Visualise the outputs of the current network
-        viz_board.images(outputs.data, nrow=5) #TODO: Fix this as it expects a 3-channel tensor
+        # TODO: Visualise the outputs of the current network
+        
 
         loss = criterion( outputs, labels )
         loss.backward()
@@ -74,6 +67,7 @@ for epoch in range(_NUM_EPOCHS_):
         #Print statistics
         # TODO: Add Jacquard metric here
         running_loss += loss.item()
+        board_writer.add_scalar("data/loss", loss.item(), i)
         with open('loss.txt','a+') as file:
             file.write("{:}\n".format(loss.item()))
         #TODO: Add the training loss to visdom
@@ -83,6 +77,8 @@ for epoch in range(_NUM_EPOCHS_):
         # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py
 
 print("Training complete .....")
+board_writer.export_scalars_to_json("./log.json")
+board_writer.close()
 
 #Test the network
 correct = 0
