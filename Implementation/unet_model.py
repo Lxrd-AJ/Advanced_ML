@@ -69,7 +69,7 @@ class UNet( nn.Module ):
         self.is_deconv = True
         self.in_channels = in_channels
         self.is_batchnorm = True
-        self.feature_scale = 2 # For reducing the no. output filters, change to 1 during final training
+        self.feature_scale = 4 
 
         filters = [int(x/self.feature_scale) for x in [64, 128, 256, 512, 1024]]
 
