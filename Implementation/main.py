@@ -13,15 +13,36 @@ from unet_model import UNet
 from torch.autograd import Variable  
 from tensorboardX import SummaryWriter
 
+# TODO: Verify and Test this function
+"""
+This is also known as Intersection-over-union
+"""
+def jacquard_index(pred, target, n_classes = 10):
+    ious = []
+    pred = pred.view(-1)
+    target = target.view(-1)
+
+    # Ignore IoU for background class ("0")
+    for cls in xrange(1, n_classes):  # This goes from 1:n_classes-1 -> class "0" is ignored
+        pred_inds = pred == cls
+        target_inds = target == cls
+        intersection = (pred_inds[target_inds]).long().sum().data.cpu()[0]  # Cast to long to prevent overflows
+        union = pred_inds.long().sum().data.cpu()[0] + target_inds.long().sum().data.cpu()[0] - intersection
+        if union == 0:
+            ious.append(float('nan'))  # If there is no ground truth, do not include in evaluation
+        else:
+            ious.append(float(intersection) / float(max(union, 1)))
+    return np.array(ious)
+
 
 #TODO: [Bug] Fix visdom server which is not working OR use Pytorch-tensorboard instead https://github.com/lanpa/tensorboard-pytorch
 board_writer = SummaryWriter()
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data\\"
-_NUM_EPOCHS_ = 3
+_NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
-_IMAGE_SIZE_ = 500 #Ideal image size should be 3000 for final training using all channels
+_IMAGE_SIZE_ = 300 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
