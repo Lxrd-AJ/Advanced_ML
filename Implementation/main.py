@@ -13,9 +13,10 @@ from unet_model import UNet
 from torch.autograd import Variable  
 from tensorboardX import SummaryWriter
 
-# TODO: Verify and Test this function
+# TODO: Verify and Test this function https://tuatini.me/practical-image-segmentation-with-unet/
 """
 This is also known as Intersection-over-union
+- https://github.com/NVIDIA/DIGITS/tree/digits-5.0/examples/medical-imaging#dice-metric
 """
 def jacquard_index(pred, target, n_classes = 10):
     ious = []
@@ -90,12 +91,12 @@ if __name__ == "__main__":
             board_writer.add_scalar("data/loss", loss.item(), i)
             with open('loss.txt','a+') as file:
                 file.write("{:}\n".format(loss.item()))
-            #TODO: Add the training loss to visdom
+            
             print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) 
 
             # TODO: [Visualisation] Add confusion matrix and Running metrics
             # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py
-        with open('epoch_loss.txt'. 'a+') as file:
+        with open('epoch_loss.txt', 'a+') as file:
             file.write("{:}\n".format(epoch_loss))
     print("Training complete .....")
 
