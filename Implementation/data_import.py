@@ -1,8 +1,43 @@
+import sys
 import numpy as np
 import pandas as pd
 import cv2
 from shapely.wkt import loads as wkt_loads
 import tifffile as tiff
+
+
+
+def query_yes_no(question, default="yes"):
+    """Ask a yes/no question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+        It must be "yes" (the default), "no" or None (meaning
+        an answer is required of the user).
+
+    The "answer" return value is True for "yes" or False for "no".
+    """
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
+    if default is None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' "
+                             "(or 'y' or 'n').\n")
 
 # Works only for 1 and 3 channel images!
 def convTifToPng(self, img):
@@ -82,7 +117,7 @@ def generate_mask_for_image_and_class(raster_size, imageId, class_type, grid_siz
     polygon_list = _get_polygon_list(wkt_list_pandas,imageId,class_type)
     contours = _get_and_convert_contours(polygon_list,raster_size,xymax)
     mask = _plot_mask_from_contours(raster_size,contours,1)
-    return mask
+    return mask, True if (polygon_list == None) else False
 
 
 def mask_to_polygons(mask, epsilon=5, min_area=1.):

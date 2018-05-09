@@ -5,13 +5,13 @@ import pandas as pd
 from torch.utils.data import Dataset
 import numpy as np
 import tifffile as tiff
-from data_import import generate_mask_for_image_and_class, _get_polygon_list
+from data_import import generate_mask_for_image_and_class, _get_polygon_list, query_yes_no
 
 
 class datasetDSTL(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, dir_path, inputPath, channel='rgb' ,res=(0,0), crange=(0.1, 0.4)):
+    def __init__(self, dir_path, inputPath, channel='rgb',res=(0,0),ForceRedo=False, crange=(0.1, 0.4)):
         """
         Args:
             dir_path (string):  Working Directory.
@@ -35,44 +35,59 @@ class datasetDSTL(Dataset):
         gs = pd.read_csv(inpDir + 'grid_sizes.csv', names=['ImageId', 'Xmax', 'Ymin'], skiprows=1)
         newInputs = []
         masks = []
+        empties = {}
         listFilename = "inputs-" + str(channel) + '-' + str(self.res[0]) + 'x' + str(self.res[1])+".txt"
         maskFilename = "masks-" + str(self.res[0]) + 'x' + str(self.res[1])+".txt"
+        isEmptyFilename = "empty-masks.txt"
         listFile = Path(os.path.join( os.sep,dir_path,listFilename))
         maskFile = Path(os.path.join( os.sep,dir_path,maskFilename))
+        isEmptyFile = Path(os.path.join( os.sep,dir_path,isEmptyFilename))
+        doPreprocessing = ForceRedo
+        if not doPreprocessing:
+            if listFile.is_file() and maskFile.is_file() and isEmptyFile.is_file():
+                empties = eval(open(isEmptyFile, 'r').read())
+                with open(listFile, 'r') as f:
+                    newInputs = [line.rstrip('\n') for line in f]
+                with open(maskFile, 'r') as f:
+                    i = 0
+                    mask = []
+                    for line in f:
+                         if i < 10:
+                             mask.append(line.rstrip('\n'))
+                             i = i + 1
+                         else:
+                             i = 0
+                             masks.append(mask)
+                             mask = []
+                    masks.append(mask)
 
-        if listFile.is_file() and maskFile.is_file():
-            with open(listFile, 'r') as f:
-                newInputs = [line.rstrip('\n') for line in f]
-            with open(maskFile, 'r') as f:
-                i = 0
-                mask = []
-                for line in f:
-                     if i < 10:
-                         mask.append(line.rstrip('\n'))
-                         i = i + 1
-                     else:
-                         i = 0
-                         masks.append(mask)
-                         mask = []
-                masks.append(mask)
-
-            print ("Input files have been found! ("+str(len(newInputs))+" inputs)")
-            if len(newInputs) != len(masks):
-                raise Exception("Error, masks and inputs list are of different size!")
-        else:
+                print ("Input files have been found! ("+str(len(newInputs))+" inputs)")
+                if len(newInputs) != len(masks):                
+                    print("Error, masks and inputs list are of different size! Inputs: " +str(len(newInputs))+ "Masks: "+str(len(masks)))
+                    doPreprocessing = query_yes_no("Do you want to redo the preprocessing?")
+                if not doPreprocessing and not len(imgIDs) == len(newInputs):
+                    print ("It seems the number of images in the Inpute directory has changed!")
+                    doPreprocessing = query_yes_no("Do you want to redo the preprocessing?")
+            else:
+                doPreprocessing = True
+        if doPreprocessing:
             if not ((channel=='rgb' or channel=='gray') and res == (0,0)):
-                for idx, imageId in enumerate(imgIDs):            
-                    if channel=='rgb':
+                if channel=='rgb':
+                    for idx, imageId in enumerate(imgIDs): 
                         rgbImage = self.getImageType('rgb',imageId, inputs)
                         rgbImage = cv2.resize(rgbImage, res)
                         newInputs.append(self.saveNewImage('rgb-rscl',rgbImage, imageId))
-                    else:
-                        if channel=='gray':
+                        print('Processing Images: '+str(round((idx/len(imgIDs))*100, 2))+'%')  
+                else:
+                    if channel=='gray':
+                        for idx, imageId in enumerate(imgIDs): 
                             grayImg = self.getImageType('gray',imageId, inputs)
                             grayImg = cv2.resize(grayImg, res)
                             newInputs.append(self.saveNewImage('gray',grayImg, imageId))
-                        else:
-                            if channel=='rgb-g':
+                            print('Processing Images: '+str(round((idx/len(imgIDs))*100, 2))+'%')  
+                    else:
+                        if channel=='rgb-g':
+                            for idx, imageId in enumerate(imgIDs): 
                                 rgbImage = self.getImageType('rgb',imageId, inputs)
                                 grayImg = self.getImageType('gray',imageId, inputs)
                                 if res!=(0,0):
@@ -80,19 +95,20 @@ class datasetDSTL(Dataset):
                                     grayImg = cv2.resize(grayImg, res)
                                 rgbgImage = cv2.merge([rgbImage,grayImg])
                                 newInputs.append(self.saveNewImage('rgb-g',rgbgImage, imageId))
-                            else:
-                              if channel=='all':
-                                rgbImage = self.getImageType('rgb',imageId, inputs)
-                                grayImg = self.getImageType('gray',imageId, inputs)
-                                A8c, M8c = self.getImageType('16c',imageId, inputs)
-                                rgbImage = cv2.resize(rgbImage, res)
-                                grayImg = cv2.resize(grayImg, res)
-                                A8c = cv2.resize(A8c, res)
-                                M8c = cv2.resize(M8c, res)
-                                c20Image = cv2.merge([rgbImage,grayImg, A8c, M8c])
-                                newInputs.append(self.saveNewImage('20c', c20Image, imageId))
-
-                    print('Processing Images: '+str((idx/len(imgIDs))*100)+'%')
+                                print('Processing Images: '+str(round((idx/len(imgIDs))*100, 2))+'%')  
+                        else:
+                            if channel=='all':
+                                for idx, imageId in enumerate(imgIDs): 
+                                    rgbImage = self.getImageType('rgb',imageId, inputs)
+                                    grayImg = self.getImageType('gray',imageId, inputs)
+                                    A8c, M8c = self.getImageType('16c',imageId, inputs)
+                                    rgbImage = cv2.resize(rgbImage, res)
+                                    grayImg = cv2.resize(grayImg, res)
+                                    A8c = cv2.resize(A8c, res)
+                                    M8c = cv2.resize(M8c, res)
+                                    c20Image = cv2.merge([rgbImage,grayImg, A8c, M8c])
+                                    newInputs.append(self.saveNewImage('20c', c20Image, imageId))
+                                    print('Processing Images: '+str(round((idx/len(imgIDs))*100, 2))+'%')                    
             else:
                 if(channel=='rgb'):
                     newInputs = [x for x in inputs if (not x.endswith('_P.tif') and not x.endswith('_M.tif') and not x.endswith('_A.tif'))]
@@ -108,7 +124,8 @@ class datasetDSTL(Dataset):
                 for classType in list(range(1,11)):
                     #d = _get_polygon_list(df,imageId,classType)
                     #polygons.append(d)
-                    mask = generate_mask_for_image_and_class(res,imageId,classType,gs,df)
+                    mask, isEmpty = generate_mask_for_image_and_class(res,imageId,classType,gs,df)
+                    empties[imageId] = isEmpty
                     # filename = str(dir_path)+'\\masks\\'+str(imageId)+'-'+str(classType)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png'
                     filename = os.path.join(os.sep, dir_path, 'masks', str(imageId) + '-' + str(classType) + '-' + str(self.res[0]) + 'x' + str(self.res[1])) + ".png"
                     my_file = Path(filename)
@@ -127,11 +144,15 @@ class datasetDSTL(Dataset):
                 for s in newInputs:
                     f.write(s + '\n')
 
+            target = open("empty-masks.txt", 'w')
+            target.write(str(empties))
+            print (empties)
 
         c = list(zip(newInputs, masks))
         random.shuffle(c)
         newInputs, masks = zip(*c)
 
+        self.empties = empties
         self.masks = masks
         self.res = res
         self.inputs = newInputs
