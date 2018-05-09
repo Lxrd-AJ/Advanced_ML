@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     # Network training
     for epoch in range(_NUM_EPOCHS_):
-        running_loss = 0.0
+        epoch_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             # Get the inputs for the network
             inputs = data['image'].to(_COMPUTE_DEVICE_) 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
             #Print statistics
             # TODO: Add Jacquard metric here
-            running_loss += loss.item()
+            epoch_loss = loss.item()
             board_writer.add_scalar("data/loss", loss.item(), i)
             with open('loss.txt','a+') as file:
                 file.write("{:}\n".format(loss.item()))
@@ -95,7 +95,8 @@ if __name__ == "__main__":
 
             # TODO: [Visualisation] Add confusion matrix and Running metrics
             # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py
-
+        with open('epoch_loss.txt'. 'a+') as file:
+            file.write("{:}\n".format(epoch_loss))
     print("Training complete .....")
 
     print("Training complete .....")
