@@ -11,7 +11,7 @@ from data_import import generate_mask_for_image_and_class, _get_polygon_list, qu
 class datasetDSTL(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, dir_path, inputPath, channel='rgb',res=(0,0),ForceRedo=False, crange=(0.1, 0.4)):
+    def __init__(self, dir_path, inputPath, channel='rgb',res=(0,0),includeEmpties = False,ForceRedo=False, crange=(0.1, 0.4)):
         """
         Args:
             dir_path (string):  Working Directory.
@@ -56,9 +56,10 @@ class datasetDSTL(Dataset):
                              mask.append(line.rstrip('\n'))
                              i = i + 1
                          else:
-                             i = 0
+                             i = 1
                              masks.append(mask)
                              mask = []
+                             mask.append(line.rstrip('\n'))
                     masks.append(mask)
 
                 print ("Input files have been found! ("+str(len(newInputs))+" inputs)")
@@ -148,10 +149,17 @@ class datasetDSTL(Dataset):
             target.write(str(empties))
             print (empties)
 
-        c = list(zip(newInputs, masks))
-        random.shuffle(c)
-        newInputs, masks = zip(*c)
+        if not includeEmpties:
+            c = list(zip(newInputs, masks, imgIDs))
+            d = list(c)
+            for item in c:
+                if (empties[item[2]]==True):
+                    d.remove(item)
+            newInputs, masks, imgIDs = zip(*d)
 
+        #random.shuffle(c)
+
+        self.imgIDs = imgIDs
         self.empties = empties
         self.masks = masks
         self.res = res
@@ -273,6 +281,7 @@ class datasetDSTL(Dataset):
         return torch.from_numpy(image)
 
     def __getitem__(self, idx):
+
         r =  random.random()
         probCrop = 0.1
         imageId = self.imgIDs[idx]
