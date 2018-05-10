@@ -43,7 +43,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data\\"
 _NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
-_IMAGE_SIZE_ = 300 #Ideal image size should be 3000 for final training using all channels
+_IMAGE_SIZE_ = 600 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -51,7 +51,7 @@ _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu"
 
 if __name__ == "__main__":
     trainset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_))
-    trainloader = DataLoader(trainset, batch_size=8, shuffle=True, num_workers=4)
+    trainloader = DataLoader(trainset, batch_size=4, shuffle=True, num_workers=4)
 
     classes = ('Buildings','MiscMan-made','Road','Track','Trees','Crops','Waterway','Standing_Water','Vehicle_Large','Vehicle_Small')
 
@@ -92,12 +92,13 @@ if __name__ == "__main__":
             with open('loss.txt','a+') as file:
                 file.write("{:}\n".format(loss.item()))
             
-            print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) 
+            # print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) 
 
             # TODO: [Visualisation] Add confusion matrix and Running metrics
             # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py
         with open('epoch_loss.txt', 'a+') as file:
             file.write("{:}\n".format(epoch_loss))
+        print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item()))
     print("Training complete .....")
 
     print("Training complete .....")

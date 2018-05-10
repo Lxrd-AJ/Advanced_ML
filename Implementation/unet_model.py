@@ -4,10 +4,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 """
-# TODO
-- [x] Add documentation for `UNetConv2D` module
-- [x] Add CUDA support 
-
 Compound Convolution block with a ReLU activation function between the 2 blocks
 """
 class UNetConv2D( nn.Module ):
