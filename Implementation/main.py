@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from unet_model import UNet
 from torch.autograd import Variable  
 from tensorboardX import SummaryWriter
+from sklearn.metrics import confusion_matrix
 
 # TODO: Verify and Test this function https://tuatini.me/practical-image-segmentation-with-unet/
 """
@@ -35,13 +36,38 @@ def jacquard_index(pred, target, n_classes = 10):
             ious.append(float(intersection) / float(max(union, 1)))
     return np.array(ious)
 
+"""
+- [ ] TODO: Confusion matrix
+- [ ] TODO: Sklearn classification report
+"""
+def compute_confusion_matrix(predictions, ground_truth):
+    """
+    predictions => [10,300,300]
+    """
+    if predictions.size() != ground_truth.size():
+        print("***** Error")
+
+    matrix = []
+    num_pred = predictions.size()[0]
+    imsize = predictions.size()[1] # Assume the image sizes are even ie. 300x300
+    pred = predictions.view(-1, imsize * imsize).detach()
+    target = ground_truth.view(-1, imsize * imsize).detach()
+
+    for i in range(0, num_pred):
+        if torch.cuda.is_available():
+            matrix[i] = confusion_matrix( target[i].cpu().numpy(),pred[i].cpu().numpy() )
+        else:
+            matrix[i] = confusion_matrix( target[i].cpu().numpy(),pred[i].cpu().numpy() )
+
+    return np.array(matrix)
+
 
 #TODO: [Bug] Fix visdom server which is not working OR use Pytorch-tensorboard instead https://github.com/lanpa/tensorboard-pytorch
 board_writer = SummaryWriter()
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data\\"
-_NUM_EPOCHS_ = 100
+_NUM_EPOCHS_ = 10
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE_ = 600 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -96,6 +122,8 @@ if __name__ == "__main__":
 
             # TODO: [Visualisation] Add confusion matrix and Running metrics
             # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py
+            matrix = compute_confusion_matrix( outputs,labels )
+            print(matrix)
         with open('epoch_loss.txt', 'a+') as file:
             file.write("{:}\n".format(epoch_loss))
         print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item()))
