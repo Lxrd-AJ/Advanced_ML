@@ -1,3 +1,4 @@
 torchvision
 Shapely
 tifffile
+scikit-learn
