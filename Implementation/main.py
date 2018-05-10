@@ -18,7 +18,7 @@ from tensorboardX import SummaryWriter
 board_writer = SummaryWriter()
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
-inputPath = "dstl_satellite_data\\"
+inputPath = "dstl_satellite_data/"
 _NUM_EPOCHS_ = 3
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE_ = 500 #Ideal image size should be 3000 for final training using all channels
