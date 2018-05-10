@@ -7,12 +7,14 @@ import os
 import matplotlib.pyplot as plt
 import torchvision
 import json
+import cv2
 from dataset_DSTL import datasetDSTL
 from torch.utils.data import DataLoader
 from unet_model import UNet
 from torch.autograd import Variable  
 from tensorboardX import SummaryWriter
 from sklearn.metrics import confusion_matrix
+from data_import import convTifToPng
 
 # TODO: Verify and Test this function https://tuatini.me/practical-image-segmentation-with-unet/
 # """
@@ -40,7 +42,7 @@ from sklearn.metrics import confusion_matrix
 - [x] TODO: Confusion matrix
 - [ ] TODO: Average confusion matrix across epochs
 - [ ] TODO: Plot confusion matrix http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
-- [ ] TODO: Log the IoU for each class after every epoch
+- [x] TODO: Log the IoU for each class after every epoch
 - [ ] TODO: Plot the average IoU after every epoch
 - [ ] TODO: Make Sample prediction for report
 - [ ] TODO: Sklearn classification report
@@ -95,7 +97,7 @@ board_writer = SummaryWriter()
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data\\"
-_NUM_EPOCHS_ = 200
+_NUM_EPOCHS_ = 1
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE_ = 600 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -123,7 +125,7 @@ if __name__ == "__main__":
     epoch_data = {}
     for epoch in range(_NUM_EPOCHS_):
         epoch_loss = 0.0
-        epoch_data
+        epoch_data[epoch] = {}
         for i, data in enumerate(trainloader, 0):
             # Get the inputs for the network
             inputs = data['image'].to(_COMPUTE_DEVICE_) 
@@ -157,15 +159,41 @@ if __name__ == "__main__":
         with open('epoch_loss.txt', 'a+') as file:
             file.write("{:}\n".format(epoch_loss))
         print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item()))
-        print("[Epoch {:}] Avg Jacquard Index = {:}".format(epoch+1, round(mean_iou,5)))
+        print("[Epoch {:}] Avg Jacquard Index = {:}".format(epoch+1, round(mean_iou,3)))
     print("Training complete .....")
 
-    print("Training complete .....")
     board_writer.export_scalars_to_json("./log.json")
     board_writer.close()
 
     #Test the network
-    sample = trainloader[1]
+    sample = trainset[1]
+    input = sample['image']
+    dim = input.size()
+    input = input.view(1,dim[0],dim[1],dim[2])
+    
+    prediction = model(input)[0]
+    prediction = prediction.cpu().detach().numpy()
+    prediction = np.round(prediction)
+    
+    input = convTifToPng( input.cpu().numpy() )
+
+    print(input)
+    print(type(input))
+    result = np.array(input).astype(np.uint8)
+
+    for cl in range(prediction.shape[0]): #([10, 600, 600])
+        mask = prediction[cl] * 255
+        mask = mask.numpy().astype(np.uint8)
+        
+        
+        cv2.addWeighted(result, 0.8, mask, 0.2, 0.0, result)
+    
+    # masks = torch.from_numpy(masks)
+    cv2.imshow("Result", result)
+
+
+
+
     
     # correct = 0
     # total = 0

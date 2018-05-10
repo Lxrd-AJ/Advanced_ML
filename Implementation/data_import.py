@@ -40,7 +40,7 @@ def query_yes_no(question, default="yes"):
                              "(or 'y' or 'n').\n")
 
 # Works only for 1 and 3 channel images!
-def convTifToPng(self, img):
+def convTifToPng(img):
     if(len(img.shape)==2):
         gray = img[:,:]
         rmax = np.max(gray)
