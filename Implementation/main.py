@@ -6,7 +6,7 @@ import torch.nn as nn
 import os
 import matplotlib.pyplot as plt
 import torchvision
-# import visdom
+import json
 from dataset_DSTL import datasetDSTL
 from torch.utils.data import DataLoader
 from unet_model import UNet
@@ -15,43 +15,46 @@ from tensorboardX import SummaryWriter
 from sklearn.metrics import confusion_matrix
 
 # TODO: Verify and Test this function https://tuatini.me/practical-image-segmentation-with-unet/
-"""
-This is also known as Intersection-over-union
-- https://github.com/NVIDIA/DIGITS/tree/digits-5.0/examples/medical-imaging#dice-metric
-"""
-def jacquard_index(pred, target, n_classes = 10):
-    ious = []
-    pred = pred.view(-1)
-    target = target.view(-1)
+# """
+# This is also known as Intersection-over-union
+# - https://github.com/NVIDIA/DIGITS/tree/digits-5.0/examples/medical-imaging#dice-metric
+# """
+# def jacquard_index(pred, target, n_classes = 10):
+#     ious = []
+#     pred = pred.view(-1)
+#     target = target.view(-1)
 
-    # Ignore IoU for background class ("0")
-    for cls in xrange(1, n_classes):  # This goes from 1:n_classes-1 -> class "0" is ignored
-        pred_inds = pred == cls
-        target_inds = target == cls
-        intersection = (pred_inds[target_inds]).long().sum().data.cpu()[0]  # Cast to long to prevent overflows
-        union = pred_inds.long().sum().data.cpu()[0] + target_inds.long().sum().data.cpu()[0] - intersection
-        if union == 0:
-            ious.append(float('nan'))  # If there is no ground truth, do not include in evaluation
-        else:
-            ious.append(float(intersection) / float(max(union, 1)))
-    return np.array(ious)
+#     # Ignore IoU for background class ("0")
+#     for cls in xrange(1, n_classes):  # This goes from 1:n_classes-1 -> class "0" is ignored
+#         pred_inds = pred == cls
+#         target_inds = target == cls
+#         intersection = (pred_inds[target_inds]).long().sum().data.cpu()[0]  # Cast to long to prevent overflows
+#         union = pred_inds.long().sum().data.cpu()[0] + target_inds.long().sum().data.cpu()[0] - intersection
+#         if union == 0:
+#             ious.append(float('nan'))  # If there is no ground truth, do not include in evaluation
+#         else:
+#             ious.append(float(intersection) / float(max(union, 1)))
+#     return np.array(ious)
 
 """
 - [x] TODO: Confusion matrix
-- [ ] TODO: Sklearn classification report
 - [ ] TODO: Average confusion matrix across epochs
 - [ ] TODO: Plot confusion matrix http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
 - [ ] TODO: Log the IoU for each class after every epoch
 - [ ] TODO: Plot the average IoU after every epoch
+- [ ] TODO: Make Sample prediction for report
+- [ ] TODO: Sklearn classification report
 """
 def compute_confusion_matrix(predictions, ground_truth):
     """
-    predictions => [10,300,300]
+    predictions => torch.Size([4, 10, 600, 600]) 
     """
     if predictions.size() != ground_truth.size():
         print("***** Error")
 
     matrix = []
+    predictions = predictions[-1]
+    ground_truth = ground_truth[-1]
     num_pred = predictions.size()[0]
     imsize = predictions.size()[1] # Assume the image sizes are even ie. 300x300
     pred = predictions.view(-1, imsize * imsize).detach()
@@ -61,9 +64,30 @@ def compute_confusion_matrix(predictions, ground_truth):
     target = target.cpu().numpy() if torch.cuda.is_available() else target.numpy()
 
     for i in range(0, num_pred):
-        matrix[i] = confusion_matrix( target, np.round(pred[i]) )        
+        matrix.append( confusion_matrix( target[i], np.round(pred[i]) ) )        
 
     return np.array(matrix)
+
+"""
+Computes the average jacquard index across the confusion matrix of shape (10, 2, 2)
+"""
+def jacquard_index( confusion_matrix ):
+    count = confusion_matrix.shape[0]
+    ttn = tfp = tfn = ttp = 0
+    for i in range(count):
+        cm = confusion_matrix[i]
+        if cm.shape[0] == 1:
+            continue
+        tn, fp, fn, tp = cm.ravel()
+        ttn += tn
+        tfp += fp
+        tfn += fn 
+        ttp += tp
+    ttn = ttn / count 
+    tfp = tfp / count 
+    tfn = tfn / count 
+    ttp = ttp / count 
+    return (ttp / (ttp + tfp + tfn))
 
 
 #TODO: [Bug] Fix visdom server which is not working OR use Pytorch-tensorboard instead https://github.com/lanpa/tensorboard-pytorch
@@ -71,7 +95,7 @@ board_writer = SummaryWriter()
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data\\"
-_NUM_EPOCHS_ = 10
+_NUM_EPOCHS_ = 200
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE_ = 600 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -96,8 +120,10 @@ if __name__ == "__main__":
     optimizer = optim.SGD( model.parameters(), lr=0.001, momentum=0.9 )
 
     # Network training
+    epoch_data = {}
     for epoch in range(_NUM_EPOCHS_):
         epoch_loss = 0.0
+        epoch_data
         for i, data in enumerate(trainloader, 0):
             # Get the inputs for the network
             inputs = data['image'].to(_COMPUTE_DEVICE_) 
@@ -127,10 +153,11 @@ if __name__ == "__main__":
             # TODO: [Visualisation] Add confusion matrix and Running metrics
             # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py
             matrix = compute_confusion_matrix( outputs,labels )
-            print(matrix)
+            mean_iou = jacquard_index( matrix )
         with open('epoch_loss.txt', 'a+') as file:
             file.write("{:}\n".format(epoch_loss))
         print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item()))
+        print("[Epoch {:}] Avg Jacquard Index = {:}".format(epoch+1, round(mean_iou,5)))
     print("Training complete .....")
 
     print("Training complete .....")
@@ -138,16 +165,18 @@ if __name__ == "__main__":
     board_writer.close()
 
     #Test the network
-    correct = 0
-    total = 0
-    testset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_)) #TODO: BAD! Use a real test dataset
-    testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=1)
-    with torch.no_grad():
-        for data in testloader:
-            images, labels = data
-            outputs = model(images)
-            torchvision.utils.save_image(images, "cur_images.png")
-            torchvision.utils.save_image(outputs, "cur_output.png")
+    sample = trainloader[1]
+    
+    # correct = 0
+    # total = 0
+    # testset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_)) #TODO: BAD! Use a real test dataset
+    # testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=1)
+    # with torch.no_grad():
+    #     for data in testloader:
+    #         images, labels = data
+    #         outputs = model(images)
+    #         torchvision.utils.save_image(images, "cur_images.png")
+    #         torchvision.utils.save_image(outputs, "cur_output.png")
         
 
 # print('Accuracy of the network on the 10000 test images: %d %%' % (
