@@ -37,8 +37,12 @@ def jacquard_index(pred, target, n_classes = 10):
     return np.array(ious)
 
 """
-- [ ] TODO: Confusion matrix
+- [x] TODO: Confusion matrix
 - [ ] TODO: Sklearn classification report
+- [ ] TODO: Average confusion matrix across epochs
+- [ ] TODO: Plot confusion matrix http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+- [ ] TODO: Log the IoU for each class after every epoch
+- [ ] TODO: Plot the average IoU after every epoch
 """
 def compute_confusion_matrix(predictions, ground_truth):
     """
@@ -53,11 +57,11 @@ def compute_confusion_matrix(predictions, ground_truth):
     pred = predictions.view(-1, imsize * imsize).detach()
     target = ground_truth.view(-1, imsize * imsize).detach()
 
+    pred = pred.cpu().numpy() if torch.cuda.is_available() else pred.numpy()
+    target = target.cpu().numpy() if torch.cuda.is_available() else target.numpy()
+
     for i in range(0, num_pred):
-        if torch.cuda.is_available():
-            matrix[i] = confusion_matrix( target[i].cpu().numpy(),pred[i].cpu().numpy() )
-        else:
-            matrix[i] = confusion_matrix( target[i].cpu().numpy(),pred[i].cpu().numpy() )
+        matrix[i] = confusion_matrix( target, np.round(pred[i]) )        
 
     return np.array(matrix)
 
