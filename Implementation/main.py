@@ -8,44 +8,21 @@ import matplotlib.pyplot as plt
 import torchvision
 import json
 import cv2
+import metrics
 from dataset_DSTL import datasetDSTL
 from torch.utils.data import DataLoader
 from unet_model import UNet
 from torch.autograd import Variable  
-from tensorboardX import SummaryWriter
 from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import MinMaxScaler
 from data_import import convTifToPng
 
-# TODO: Verify and Test this function https://tuatini.me/practical-image-segmentation-with-unet/
-# """
-# This is also known as Intersection-over-union
-# - https://github.com/NVIDIA/DIGITS/tree/digits-5.0/examples/medical-imaging#dice-metric
-# """
-# def jacquard_index(pred, target, n_classes = 10):
-#     ious = []
-#     pred = pred.view(-1)
-#     target = target.view(-1)
-
-#     # Ignore IoU for background class ("0")
-#     for cls in xrange(1, n_classes):  # This goes from 1:n_classes-1 -> class "0" is ignored
-#         pred_inds = pred == cls
-#         target_inds = target == cls
-#         intersection = (pred_inds[target_inds]).long().sum().data.cpu()[0]  # Cast to long to prevent overflows
-#         union = pred_inds.long().sum().data.cpu()[0] + target_inds.long().sum().data.cpu()[0] - intersection
-#         if union == 0:
-#             ious.append(float('nan'))  # If there is no ground truth, do not include in evaluation
-#         else:
-#             ious.append(float(intersection) / float(max(union, 1)))
-#     return np.array(ious)
 
 """
 - [x] TODO: Confusion matrix
-- [ ] TODO: Average confusion matrix across epochs
-- [ ] TODO: Plot confusion matrix http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
 - [x] TODO: Log the IoU for each class after every epoch
-- [ ] TODO: Plot the average IoU after every epoch
+- [x] TODO: Plot the average IoU after every epoch
 - [ ] TODO: Make Sample prediction for report
-- [ ] TODO: Sklearn classification report
 """
 def compute_confusion_matrix(predictions, ground_truth):
     """
@@ -73,7 +50,7 @@ def compute_confusion_matrix(predictions, ground_truth):
 """
 Computes the average jacquard index across the confusion matrix of shape (10, 2, 2)
 """
-def jacquard_index( confusion_matrix ):
+def jacquard_index( confusion_matrix ): # DEPRECATED!! 
     count = confusion_matrix.shape[0]
     ttn = tfp = tfn = ttp = 0
     for i in range(count):
@@ -92,14 +69,11 @@ def jacquard_index( confusion_matrix ):
     return (ttp / (ttp + tfp + tfn))
 
 
-#TODO: [Bug] Fix visdom server which is not working OR use Pytorch-tensorboard instead https://github.com/lanpa/tensorboard-pytorch
-board_writer = SummaryWriter()
-
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
-inputPath = "dstl_satellite_data\\"
-_NUM_EPOCHS_ = 1
+inputPath = "dstl_satellite_data_old/" #"dstl_satellite_data\\"
+_NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
-_IMAGE_SIZE_ = 600 #Ideal image size should be 3000 for final training using all channels
+_IMAGE_SIZE_ = 650 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -136,79 +110,78 @@ if __name__ == "__main__":
             # Forward pass + Backward pass + Optimisation
             outputs = model(inputs)
 
-            # Visualise the outputs of the current network
-            # viz_board.images(outputs.data, nrow=5) #TODO: Fix this as it expects a 3-channel tensor
-
             loss = criterion( outputs, labels )
             loss.backward()
             optimizer.step()
 
-            #Print statistics
-            # TODO: Add Jacquard metric here
             epoch_loss = loss.item()
-            board_writer.add_scalar("data/loss", loss.item(), i)
-            with open('loss.txt','a+') as file:
-                file.write("{:}\n".format(loss.item()))
-            
             # print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) 
-
-            # TODO: [Visualisation] Add confusion matrix and Running metrics
-            # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py
             matrix = compute_confusion_matrix( outputs,labels )
-            mean_iou = jacquard_index( matrix )
-        with open('epoch_loss.txt', 'a+') as file:
-            file.write("{:}\n".format(epoch_loss))
+            mean_iou = jacquard_index( matrix )# DEPRECATED
+            # mean_iou = np.average( metrics.computeJacquard(labels, outputs) )
+            
+        epoch_data[epoch]['loss'] = epoch_loss
+        epoch_data[epoch]['MeanIOU'] = mean_iou
+
         print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item()))
         print("[Epoch {:}] Avg Jacquard Index = {:}".format(epoch+1, round(mean_iou,3)))
+
+        with open("epoch_data_2.json",'w') as file:
+            json.dump(epoch_data, file)
     print("Training complete .....")
 
-    board_writer.export_scalars_to_json("./log.json")
-    board_writer.close()
+    
+
+    
 
     #Test the network
-    sample = trainset[1]
-    input = sample['image']
-    dim = input.size()
-    input = input.view(1,dim[0],dim[1],dim[2])
+    # sample = trainset[1]
+    # _input = sample['image']
+    # dim = _input.size()
+    # input = _input.view(1,dim[0],dim[1],dim[2])
     
-    prediction = model(input)[0]
-    prediction = prediction.cpu().detach().numpy()
-    prediction = np.round(prediction)
+    # prediction = model(input)[0]
+    # prediction = prediction.cpu().detach().numpy()
+    # prediction = np.round(prediction)
     
-    print(input.cpu().numpy())
-    input = convTifToPng( input.cpu().numpy() )
+    # input = _input
+    # input = input.numpy()
+    
+    # # input = #convTifToPng( input.cpu().numpy() )
+    # scaler = MinMaxScaler(feature_range=(0,255))
+    # for dim in range(0,input.shape[0]):
+    #     input[dim] = scaler.fit_transform( input[dim] )
+    # input = np.round(input)
 
-    print(input)
-    print(type(input))
-    result = np.array(input).astype(np.uint8)
 
-    for cl in range(prediction.shape[0]): #([10, 600, 600])
-        mask = prediction[cl] * 255
-        mask = mask.numpy().astype(np.uint8)
+    # dim = input.shape
+    # input = input.reshape((dim[1],dim[2],dim[0]))
+    # cv2.imshow("Input", input)
+    # cv2.waitKey(60)
+    # result = np.array(input).astype(np.uint8)
+    # for cl in range(0,prediction.shape[0]): #([10, 600, 600])
+    #     mask = np.zeros(input.shape)
+    #     print(mask.shape)
+    #     for i in range(0,dim[0]): # 3 i.e number of image channels
+    #         mask[i] = prediction[cl] * 255
+    #     print(mask)
+    #     print(mask.shape)
+    #     plt.figure(1)
+    #     plt.imshow(prediction[cl] * 255)
+    #     plt.show()
+    #     mask = mask.astype(np.uint8)
         
         
-        cv2.addWeighted(result, 0.8, mask, 0.2, 0.0, result)
+    #     cv2.addWeighted(result, 0.8, mask, 0.2, 0.0, result)
     
-    # masks = torch.from_numpy(masks)
-    cv2.imshow("Result", result)
+    # # masks = torch.from_numpy(masks)
+    # print(result)
+    # print(result.shape)
+    # plt.figure(2)
+    # plt.imshow(result)
+    # plt.show()
+    # cv2.imshow("Result", result)
 
 
-
-
-    
-    # correct = 0
-    # total = 0
-    # testset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_)) #TODO: BAD! Use a real test dataset
-    # testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=1)
-    # with torch.no_grad():
-    #     for data in testloader:
-    #         images, labels = data
-    #         outputs = model(images)
-    #         torchvision.utils.save_image(images, "cur_images.png")
-    #         torchvision.utils.save_image(outputs, "cur_output.png")
-        
-
-# print('Accuracy of the network on the 10000 test images: %d %%' % (
-    # 100 * correct / total))
 
 # export PYTHONPATH='/usr/local/lib/python3.5/dist-packages'
