@@ -34,7 +34,7 @@
 	- https://github.com/Lextal/pspnet-pytorch
 - [x] UNet Implementation
 - [x] Model training
-- [ ] Model validation
+
 
 
 

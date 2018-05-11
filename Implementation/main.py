@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import torchvision
 import json
 import cv2
+import metrics
 from dataset_DSTL import datasetDSTL
 from torch.utils.data import DataLoader
 from unet_model import UNet
@@ -15,36 +16,12 @@ from torch.autograd import Variable
 from sklearn.metrics import confusion_matrix
 from data_import import convTifToPng
 
-# TODO: Verify and Test this function https://tuatini.me/practical-image-segmentation-with-unet/
-# """
-# This is also known as Intersection-over-union
-# - https://github.com/NVIDIA/DIGITS/tree/digits-5.0/examples/medical-imaging#dice-metric
-# """
-# def jacquard_index(pred, target, n_classes = 10):
-#     ious = []
-#     pred = pred.view(-1)
-#     target = target.view(-1)
-
-#     # Ignore IoU for background class ("0")
-#     for cls in xrange(1, n_classes):  # This goes from 1:n_classes-1 -> class "0" is ignored
-#         pred_inds = pred == cls
-#         target_inds = target == cls
-#         intersection = (pred_inds[target_inds]).long().sum().data.cpu()[0]  # Cast to long to prevent overflows
-#         union = pred_inds.long().sum().data.cpu()[0] + target_inds.long().sum().data.cpu()[0] - intersection
-#         if union == 0:
-#             ious.append(float('nan'))  # If there is no ground truth, do not include in evaluation
-#         else:
-#             ious.append(float(intersection) / float(max(union, 1)))
-#     return np.array(ious)
 
 """
 - [x] TODO: Confusion matrix
-- [ ] TODO: Average confusion matrix across epochs
-- [ ] TODO: Plot confusion matrix http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
 - [x] TODO: Log the IoU for each class after every epoch
-- [ ] TODO: Plot the average IoU after every epoch
+- [x] TODO: Plot the average IoU after every epoch
 - [ ] TODO: Make Sample prediction for report
-- [ ] TODO: Sklearn classification report
 """
 def compute_confusion_matrix(predictions, ground_truth):
     """
@@ -72,7 +49,7 @@ def compute_confusion_matrix(predictions, ground_truth):
 """
 Computes the average jacquard index across the confusion matrix of shape (10, 2, 2)
 """
-def jacquard_index( confusion_matrix ):
+def jacquard_index( confusion_matrix ): # DEPRECATED!! 
     count = confusion_matrix.shape[0]
     ttn = tfp = tfn = ttp = 0
     for i in range(count):
@@ -93,7 +70,7 @@ def jacquard_index( confusion_matrix ):
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data/" #"dstl_satellite_data\\"
-_NUM_EPOCHS_ = 50
+_NUM_EPOCHS_ = 1
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE_ = 250 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -138,10 +115,10 @@ if __name__ == "__main__":
 
             epoch_loss = loss.item()
             # print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) 
-            # TODO: [Visualisation] Add confusion matrix and Running metrics
-            # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py
             matrix = compute_confusion_matrix( outputs,labels )
-            mean_iou = jacquard_index( matrix )
+            # mean_iou = jacquard_index( matrix ) DEPRECATED
+            mean_iou = np.average( metrics.computeJacquard(labels, outputs) )
+            
         epoch_data[epoch]['loss'] = epoch_loss
         epoch_data[epoch]['MeanIOU'] = mean_iou
 
