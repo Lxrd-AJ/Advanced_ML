@@ -12,7 +12,6 @@ from dataset_DSTL import datasetDSTL
 from torch.utils.data import DataLoader
 from unet_model import UNet
 from torch.autograd import Variable  
-from tensorboardX import SummaryWriter
 from sklearn.metrics import confusion_matrix
 from data_import import convTifToPng
 
@@ -92,12 +91,9 @@ def jacquard_index( confusion_matrix ):
     return (ttp / (ttp + tfp + tfn))
 
 
-#TODO: [Bug] Fix visdom server which is not working OR use Pytorch-tensorboard instead https://github.com/lanpa/tensorboard-pytorch
-board_writer = SummaryWriter()
-
 dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data/" #"dstl_satellite_data\\"
-_NUM_EPOCHS_ = 1
+_NUM_EPOCHS_ = 50
 _NUM_CHANNELS_= 3
 _IMAGE_SIZE_ = 250 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -136,35 +132,27 @@ if __name__ == "__main__":
             # Forward pass + Backward pass + Optimisation
             outputs = model(inputs)
 
-            # Visualise the outputs of the current network
-            # viz_board.images(outputs.data, nrow=5) #TODO: Fix this as it expects a 3-channel tensor
-
             loss = criterion( outputs, labels )
             loss.backward()
             optimizer.step()
 
-            #Print statistics
-            # TODO: Add Jacquard metric here
             epoch_loss = loss.item()
-            board_writer.add_scalar("data/loss", loss.item(), i)
-            with open('loss.txt','a+') as file:
-                file.write("{:}\n".format(loss.item()))
-            
             # print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item())) 
-
             # TODO: [Visualisation] Add confusion matrix and Running metrics
             # https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/metrics.py
             matrix = compute_confusion_matrix( outputs,labels )
             mean_iou = jacquard_index( matrix )
-        with open('epoch_loss.txt', 'a+') as file:
-            file.write("{:}\n".format(epoch_loss))
-        # TODO: Add Axis labels to loss plots
+        epoch_data[epoch]['loss'] = epoch_loss
+        epoch_data[epoch]['MeanIOU'] = mean_iou
+
         print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item()))
         print("[Epoch {:}] Avg Jacquard Index = {:}".format(epoch+1, round(mean_iou,3)))
     print("Training complete .....")
 
-    board_writer.export_scalars_to_json("./log.json")
-    board_writer.close()
+    with open("epoch_data.json",'w') as file:
+        json.dump(epoch_data, file)
+
+    
 
     #Test the network
     sample = trainset[1]
