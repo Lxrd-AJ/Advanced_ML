@@ -175,6 +175,7 @@ if __name__ == "__main__":
     prediction = prediction.cpu().detach().numpy()
     prediction = np.round(prediction)
     
+    print(input.cpu().numpy())
     input = convTifToPng( input.cpu().numpy() )
 
     print(input)
