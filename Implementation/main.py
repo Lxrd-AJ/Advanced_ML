@@ -99,7 +99,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data/" #"dstl_satellite_data\\"
 _NUM_EPOCHS_ = 1
 _NUM_CHANNELS_= 3
-_IMAGE_SIZE_ = 600 #Ideal image size should be 3000 for final training using all channels
+_IMAGE_SIZE_ = 250 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -158,6 +158,7 @@ if __name__ == "__main__":
             mean_iou = jacquard_index( matrix )
         with open('epoch_loss.txt', 'a+') as file:
             file.write("{:}\n".format(epoch_loss))
+        # TODO: Add Axis labels to loss plots
         print("[%d, %5d] loss: %.3f" % (epoch+1, i+1, loss.item()))
         print("[Epoch {:}] Avg Jacquard Index = {:}".format(epoch+1, round(mean_iou,3)))
     print("Training complete .....")
