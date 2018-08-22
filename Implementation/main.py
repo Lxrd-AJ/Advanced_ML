@@ -73,16 +73,16 @@ dir_path = os.path.dirname(os.path.realpath(__file__)) + ""
 inputPath = "dstl_satellite_data_old/" #"dstl_satellite_data\\"
 _NUM_EPOCHS_ = 100
 _NUM_CHANNELS_= 3
-_IMAGE_SIZE_ = 650 #Ideal image size should be 3000 for final training using all channels
+_IMAGE_SIZE_ = 300 #Ideal image size should be 3000 for final training using all channels
 _COMPUTE_DEVICE_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-# torch.set_default_tensor_type(torch.FloatTensor)
+torch.set_default_tensor_type(torch.FloatTensor)
 
 if __name__ == "__main__":
     trainset = datasetDSTL(dir_path, inputPath, channel='rgb', res=(_IMAGE_SIZE_,_IMAGE_SIZE_))
     trainloader = DataLoader(trainset, batch_size=4, shuffle=True, num_workers=4)
-
+    print("loading finished.....")
     classes = ('Buildings','MiscMan-made','Road','Track','Trees','Crops','Waterway','Standing_Water','Vehicle_Large','Vehicle_Small')
 
     # Model definition
@@ -93,14 +93,18 @@ if __name__ == "__main__":
 
     # Loss function and Optimizer definitions
     criterion = nn.BCELoss() 
-    optimizer = optim.SGD( model.parameters(), lr=0.001, momentum=0.9 )
-
+    optimizer = optim.SGD( model.parameters(), lr=0.001, momentum=0.899 )
+    print("starting net TRAIN............")
+    print(trainloader)
+    print()
+    print()
     # Network training
     epoch_data = {}
     for epoch in range(_NUM_EPOCHS_):
         epoch_loss = 0.0
         epoch_data[epoch] = {}
         for i, data in enumerate(trainloader, 0):
+            
             # Get the inputs for the network
             inputs = data['image'].to(_COMPUTE_DEVICE_) 
             labels = data['masks'].to(_COMPUTE_DEVICE_) 
@@ -135,48 +139,48 @@ if __name__ == "__main__":
     
 
     #Test the network
-    # sample = trainset[1]
-    # _input = sample['image']
-    # dim = _input.size()
-    # input = _input.view(1,dim[0],dim[1],dim[2])
+    sample = trainset[1]
+    _input = sample['image']
+    dim = _input.size()
+    input = _input.view(1,dim[0],dim[1],dim[2])
     
-    # prediction = model(input)[0]
-    # prediction = prediction.cpu().detach().numpy()
-    # prediction = np.round(prediction)
+    prediction = model(input)[0]
+    prediction = prediction.cpu().detach().numpy()
+    prediction = np.round(prediction)
     
-    # input = _input
-    # input = input.numpy()
+    input = _input
+    input = input.numpy()
     
-    # # input = #convTifToPng( input.cpu().numpy() )
-    # scaler = MinMaxScaler(feature_range=(0,255))
-    # for dim in range(0,input.shape[0]):
-    #     input[dim] = scaler.fit_transform( input[dim] )
-    # input = np.round(input)
+    input = convTifToPng( input.cpu().numpy() )
+    scaler = MinMaxScaler(feature_range=(0,255))
+    for dim in range(0,input.shape[0]):
+        input[dim] = scaler.fit_transform( input[dim] )
+    input = np.round(input)
 
 
-    # dim = input.shape
-    # input = input.reshape((dim[1],dim[2],dim[0]))
-    # cv2.imshow("Input", input)
-    # cv2.waitKey(60)
-    # result = np.array(input).astype(np.uint8)
-    # for cl in range(0,prediction.shape[0]): #([10, 600, 600])
-    #     mask = np.zeros(input.shape)
-    #     print(mask.shape)
-    #     for i in range(0,dim[0]): # 3 i.e number of image channels
-    #         mask[i] = prediction[cl] * 255
-    #     print(mask)
-    #     print(mask.shape)
-    #     plt.figure(1)
-    #     plt.imshow(prediction[cl] * 255)
-    #     plt.show()
-    #     mask = mask.astype(np.uint8)
+    dim = input.shape
+    input = input.reshape((dim[1],dim[2],dim[0]))
+    cv2.imshow("Input", input)
+    cv2.waitKey(60)
+    result = np.array(input).astype(np.uint8)
+    for cl in range(0,prediction.shape[0]): #([10, 600, 600])
+        mask = np.zeros(input.shape)
+        print(mask.shape)
+        for i in range(0,dim[0]): # 3 i.e number of image channels
+            mask[i] = prediction[cl] * 255
+        print(mask)
+        print(mask.shape)
+        plt.figure(1)
+        plt.imshow(prediction[cl] * 255)
+        plt.show()
+        mask = mask.astype(np.uint8)
         
         
-    #     cv2.addWeighted(result, 0.8, mask, 0.2, 0.0, result)
+        cv2.addWeighted(result, 0.8, mask, 0.2, 0.0, result)
     
     # # masks = torch.from_numpy(masks)
-    # print(result)
-    # print(result.shape)
+    print(result)
+    print(result.shape)
     # plt.figure(2)
     # plt.imshow(result)
     # plt.show()

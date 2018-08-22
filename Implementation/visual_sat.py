@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 if __name__ == "__main__":
     print ("Hello World")
     
-df = pd.read_csv("C:/Users/James/Documents/karla/train_wkt_v4.csv")
+df = pd.read_csv("J:/aml 2018/train_wkt_v4.csv")
 df.head()
 
 polygonsList = {}
@@ -99,7 +99,7 @@ for im in df.ImageId.unique():
     # Each image has to be collected/saved and the image closed before the next one can be loaded
     #plt.show()
     #savefig(plt)
-    plt.savefig('SAT_'+ im + '.png')
+    plt.savefig('J:/aml 2018/vsat/'+'SAT_'+ im + '.png')
     # use close method to garbage collect figures and reduce memory use, handle remains even when saving direct to disk
     plt.close()
     

@@ -63,6 +63,7 @@ class datasetDSTL(Dataset):
                     masks.append(mask)
 
                 print ("Input files have been found! ("+str(len(newInputs))+" inputs)")
+                #doPreprocessing = True
                 if len(newInputs) != len(masks):                
                     print("Error, masks and inputs list are of different size! Inputs: " +str(len(newInputs))+ "Masks: "+str(len(masks)))
                     doPreprocessing = query_yes_no("Do you want to redo the preprocessing?")
@@ -129,6 +130,7 @@ class datasetDSTL(Dataset):
                     empties[imageId] = isEmpty
                     # filename = str(dir_path)+'\\masks\\'+str(imageId)+'-'+str(classType)+'-'+str(self.res[0])+'x'+str(self.res[1])+'.png'
                     filename = os.path.join(os.sep, dir_path, 'masks', str(imageId) + '-' + str(classType) + '-' + str(self.res[0]) + 'x' + str(self.res[1])) + ".png"
+                    #print("genFile: "+filename)
                     my_file = Path(filename)
                     if not my_file.is_file():
                         cv2.imwrite(filename,mask) #*255
@@ -277,7 +279,7 @@ class datasetDSTL(Dataset):
         # Added Cuda support http://pytorch.org/tutorials/beginner/former_torchies/tensor_tutorial.html#cuda-tensors
         # if torch.cuda.is_available():
         #     return torch.from_numpy(image, device=torch.device('cuda'))  
-        image = image.astype(dtype)
+        image = image.astype(np.float32)
         return torch.from_numpy(image)
 
     def __getitem__(self, idx):
@@ -291,13 +293,14 @@ class datasetDSTL(Dataset):
             strength = random.uniform(self.crange[0],self.crange[1])
             dir = np.random.randint(0,360) 
             image = self.randomCrop(image,dir,strength)
-        image = self.toTensor(image)
+        #image = self.toTensor(image)
         masks = self.masks[idx]
         masksImgs = []
-
+        #print(masks)
         for maskFile in masks:
             # masksImgs.append(self.toTensor(self.randomCrop(cv2.imread(maskFile),dir,strength)))
-            mask = cv2.imread(maskFile, cv2.IMREAD_GRAYSCALE)           
+            mask = cv2.imread(maskFile, cv2.IMREAD_GRAYSCALE)
+            #print(maskFile)           
             if (r<=probCrop):
                 mask = self.randomCrop(mask,dir,strength)
             #print("MASK")
@@ -307,6 +310,6 @@ class datasetDSTL(Dataset):
             #print()
             masksImgs.append(self.toTensor(mask) )
         masksImgs_ = torch.cat(masksImgs).view(len(masksImgs), self.res[0], self.res[1])
-        item = {'image': image, 'masks': masksImgs_}
-
+        item = {'image': image.astype(np.float32), 'masks': masksImgs_}
+        #print(item)
         return item
